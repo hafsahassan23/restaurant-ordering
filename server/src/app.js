@@ -1,3 +1,6 @@
+
+
+
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -10,6 +13,10 @@ const app = express();
 app.use(helmet());
 app.use(cors({ origin: 'http://localhost:5173' }));
 app.use(express.json());
+
+app.use('/api/public', require('./routes/publicRoutes'));   
+app.use('/api', require('./routes/orderRoutes'));           
+app.use('/api/stock', require('./routes/stockRoutes'));    
 
 // General rate limit for the whole API (login has a stricter one of its own)
 const apiLimiter = rateLimit({
