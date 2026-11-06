@@ -56,14 +56,14 @@ describe('Orders and stock deduction', () => {
   });
 
   it('confirming sends the order to the kitchen and selling 10 portions deducts the right amounts', async () => {
-    const eggs = await dishId('Fried eggs'); // recipe: 2 eggs, 0.01 L oil, 0.02 kg onion
+    const eggs = await dishId('Fried eggs'); // recipe: 2 eggs, 0.01 L oil, 0.02 kg detail
     const order = await customerOrder(table1, [{ dishId: eggs, quantity: 10 }]);
     const res = await confirm(waiter1Token, order.body.id);
     expect(res.status).toBe(200);
 
     expect(await stock('Eggs')).toBe(80);
     expect(await stock('Oil')).toBeCloseTo(99.9, 3);
-    expect(await stock('Onion')).toBeCloseTo(99.8, 3);
+    expect(await stock('detail')).toBeCloseTo(99.8, 3);
 
     const sales = await db('stock_movements').where({ reason: 'sale' });
     expect(sales).toHaveLength(3);

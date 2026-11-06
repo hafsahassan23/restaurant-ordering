@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
 import Layout from "../components/Layout.jsx";
 import StatusChip from "../components/StatusChip.jsx";
+import ManagerNav from "../components/ManagerNav.jsx";
 import { api } from "../lib/api";
 
 export default function ManagerTables() {
@@ -16,6 +17,7 @@ export default function ManagerTables() {
 
   return (
     <Layout>
+      <ManagerNav />
       <div className="mb-4 flex flex-wrap items-end gap-3">
         <h1 className="mr-auto text-2xl font-bold">{t("manager.tables")}</h1>
         <label className="text-sm font-medium print:hidden">

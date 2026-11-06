@@ -1,5 +1,5 @@
 export default {
-  app: { name: 'Restoran Banaadir', tagline: 'Restaurant Management' },
+  app: { name: 'Som Restaurant RTO', tagline: 'Real-Time Ordering Management' },
   common: {
     loading: 'Loading...', save: 'Save', cancel: 'Cancel', confirm: 'Confirm',
     edit: 'Edit', delete: 'Delete', back: 'Back', logout: 'Log out',
@@ -28,7 +28,7 @@ export default {
   },
     customer: {
     table: 'Table', add: 'Add to order', cart: 'Your order', send: 'Send order', sending: 'Sending...',
-    total: 'Total', notes: 'Notes', notesHint: 'Example: no onions', quantity: 'Quantity',
+    total: 'Total', notes: 'Notes', notesHint: 'Example: no details', quantity: 'Quantity',
     required: 'Required', optional: 'Optional', chooseOne: 'Choose one', chooseUpTo: 'Choose up to {{n}}',
     unavailable: 'Not available now', closed: 'Please ask a waiter',
     invalidTable: 'This table code does not work. Please ask a waiter.',
@@ -73,5 +73,34 @@ export default {
       VALIDATION: 'Please check the values you entered',
       generic: 'Something went wrong',
     },
+  },
+    nav: { tables: 'Tables and QR', reports: 'Reports', menu: 'Menu and recipes', stock: 'Stock', settings: 'Settings' },
+  reports: {
+    title: 'Reports', from: 'From', to: 'To', apply: 'Show',
+    sales: 'Total sales', bills: 'Bills', avgPrep: 'Average preparation time', minutes: 'min',
+    byDish: 'Sales by dish', byCategory: 'Sales by category', daily: 'Daily sales',
+    foodCost: 'Food cost %', dish: 'Dish', price: 'Price', cost: 'Ingredient cost',
+    pct: 'Cost %', high: 'High', ok: 'OK', empty: 'No data for this period', error: 'Could not load the report',
+  },
+  menuAdmin: {
+    title: 'Menu and recipes', available: 'Available', force: 'Force unavailable (manager)', recipe: 'Recipe',
+    ingredient: 'Ingredient', qtyPerPortion: 'Quantity per portion', addIngredient: 'Add ingredient',
+    saveRecipe: 'Save recipe', saved: 'Saved', hide: 'Hide',
+    reasons: {
+      out_of_stock: 'Out of stock', manual: 'Switched off', override: 'Blocked by manager', no_recipe: 'No recipe',
+    },
+    err: { NO_RECIPE: 'A dish needs a recipe before it can be made available', generic: 'Something went wrong' },
+  },
+  stock: {
+    title: 'Stock', ingredient: 'Ingredient', qty: 'Stock', unit: 'Unit', min: 'Minimum', cost: 'Unit cost',
+    low: 'Low stock', receive: 'Add stock / adjust', reason: 'Reason', delivery: 'Delivery', waste: 'Waste',
+    adjustment: 'Adjustment', sale: 'Sale', amount: 'Quantity', unitCost: 'Unit cost', note: 'Note',
+    submit: 'Save', movements: 'Stock movements', choose: 'Choose an ingredient',
+    err: { NEGATIVE_STOCK: 'Stock cannot go below zero', generic: 'Something went wrong' },
+  },
+  settings: {
+    title: 'Settings', serviceCharge: 'Service charge (%)', save: 'Save', saved: 'Saved',
+    sms: 'SMS messages (simulated)', noSms: 'No SMS yet', audit: 'Audit log',
+    who: 'User', action: 'Action', when: 'When',
   },
 };

@@ -1,5 +1,5 @@
 export default {
-  app: { name: 'Restoran Banaadir', tagline: 'Maamulka Cuntada' },
+  app: { name: 'Som Restaurant RTO', tagline: 'Maamulka Cuntada' },
   common: {
     loading: 'Waa la soo rarayaa...', save: 'Keydi', cancel: 'Jooji', confirm: 'Xaqiiji',
     edit: 'Wax ka beddel', delete: 'Tirtir', back: 'Dib u noqo', logout: 'Ka bax',
@@ -73,5 +73,34 @@ export default {
       VALIDATION: 'Xogta la gelisay waa khalad',
       generic: 'Wax khalad ah ayaa dhacay',
     },
+  },
+    nav: { tables: 'Miisaska iyo QR', reports: 'Warbixinno', menu: 'Cuntada iyo habka', stock: 'Kaydka', settings: 'Dejinta' },
+  reports: {
+    title: 'Warbixinno', from: 'Laga bilaabo', to: 'Ilaa', apply: 'Muuji',
+    sales: 'Iibka guud', bills: 'Biilal', avgPrep: 'Celceliska karinta', minutes: 'daqiiqo',
+    byDish: 'Iibka cunto kasta', byCategory: 'Iibka qaybaha', daily: 'Iibka maalinlaha ah',
+    foodCost: 'Qiimaha cuntada (food cost %)', dish: 'Cuntada', price: 'Qiimaha', cost: 'Kharashka maaddooyinka',
+    pct: 'Kharash %', high: 'Qiimo sare', ok: 'Caadi', empty: 'Xog ma jirto muddadan', error: 'Warbixinta lama soo qaadi karo',
+  },
+  menuAdmin: {
+    title: 'Cuntada iyo habka cuntada', available: 'Diyaar', force: 'Ku xidh (maamule)', recipe: 'Habka cuntada',
+    ingredient: 'Maaddo', qtyPerPortion: 'Qaddarka hal qaybood', addIngredient: 'Ku dar maaddo',
+    saveRecipe: 'Keydi habka', saved: 'La keydiyay', hide: 'Qari',
+    reasons: {
+      out_of_stock: 'Maaddo way dhammaatay', manual: 'Waa la damiyay', override: 'Maamule ayaa xidhay', no_recipe: 'Recipe ma jiro',
+    },
+    err: { NO_RECIPE: 'Cuntada looma furi karo recipe la\'aan', generic: 'Wax khalad ah ayaa dhacay' },
+  },
+  stock: {
+    title: 'Kaydka', ingredient: 'Maaddo', qty: 'Kayd', unit: 'Cutub', min: 'Ugu yaraan', cost: 'Qiimaha cutubka',
+    low: 'Kayd yar', receive: 'Ku dar kayd / hagaajin', reason: 'Sabab', delivery: 'Keyd cusub', waste: 'Burbur',
+    adjustment: 'Hagaajin', sale: 'Iib', amount: 'Qaddarka', unitCost: 'Qiimaha cutubka', note: 'Faallo',
+    submit: 'Keydi', movements: 'Dhaqdhaqaaqa kaydka', choose: 'Dooro maaddo',
+    err: { NEGATIVE_STOCK: 'Kaydku ma noqon karo wax ka yar eber', generic: 'Wax khalad ah ayaa dhacay' },
+  },
+  settings: {
+    title: 'Dejinta', serviceCharge: 'Khidmadda adeegga (%)', save: 'Keydi', saved: 'La keydiyay',
+    sms: 'Fariimaha SMS (tijaabo)', noSms: 'SMS ma jiro weli', audit: 'Diiwaanka falalka',
+    who: 'Qofka', action: 'Fal', when: 'Goorta',
   },
 };

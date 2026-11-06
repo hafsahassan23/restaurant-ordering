@@ -14,3 +14,6 @@ exports.loadMenuData = async () => {
     .select('modifier_ingredients.modifier_id', 'modifier_ingredients.qty', 'ingredients.stock_qty');
   return { categories, dishes, recipes, groups, modifiers, modifierIngredients };
 };
+
+exports.findDish = (id) => db('dishes').where({ id }).first();
+exports.updateDish = (id, patch) => db('dishes').where({ id }).update(patch);

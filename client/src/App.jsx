@@ -3,12 +3,16 @@ import { useAuth } from "./context/AuthContext.jsx";
 import { homeFor } from "./lib/roles.js";
 import ProtectedRoute from "./components/ProtectedRoute.jsx";
 import Login from "./pages/Login.jsx";
-// import RoleHome from "./pages/RoleHome.jsx";
 import Customer from "./pages/Customer.jsx";
 import Kitchen from "./pages/Kitchen.jsx";
 import Waiter from "./pages/Waiter.jsx";
-import ManagerTables from "./pages/ManagerTables.jsx";
 import Cashier from "./pages/Cashier.jsx";
+import ManagerTables from "./pages/ManagerTables.jsx";
+import Reports from "./pages/Reports.jsx";
+import MenuAdmin from "./pages/MenuAdmin.jsx";
+import Stock from "./pages/Stock.jsx";
+import Settings from "./pages/Settings.jsx";
+
 function RootRedirect() {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -25,9 +29,15 @@ export default function App() {
       <Route path="/login" element={<Login />} />
       <Route path="/t/:token" element={<Customer />} />
       <Route path="/manager" element={guard("manager", <ManagerTables />)} />
+      <Route path="/manager/reports" element={guard("manager", <Reports />)} />
+      <Route path="/manager/menu" element={guard("manager", <MenuAdmin />)} />
+      <Route path="/manager/stock" element={guard("manager", <Stock />)} />
+      <Route
+        path="/manager/settings"
+        element={guard("manager", <Settings />)}
+      />
       <Route path="/waiter" element={guard("waiter", <Waiter />)} />
       <Route path="/kitchen" element={guard("kitchen", <Kitchen />)} />
-      {/* <Route path="/cashier" element={guard("cashier", <RoleHome />)} /> */}
       <Route path="/cashier" element={guard("cashier", <Cashier />)} />
       <Route path="/" element={<RootRedirect />} />
       <Route path="*" element={<Navigate to="/" replace />} />

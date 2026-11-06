@@ -41,6 +41,7 @@ exports.getMenu = async () => {
       description_so: dish.description_so, description_en: dish.description_en,
       price: Number(dish.price), photo_url: dish.photo_url, prep_minutes: dish.prep_minutes,
       available: reason === null, unavailable_reason: reason, modifier_groups,
+      is_available: !!dish.is_available, force_unavailable: !!dish.force_unavailable,
     };
   });
 

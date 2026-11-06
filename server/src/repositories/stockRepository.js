@@ -18,3 +18,9 @@ exports.recentMovements = (limit = 100) =>
     .select('stock_movements.*', 'ingredients.name_en', 'ingredients.name_so', 'ingredients.unit')
     .orderBy('stock_movements.id', 'desc')
     .limit(limit);
+
+exports.findIngredients = (ids) => (ids.length ? db('ingredients').whereIn('id', ids) : Promise.resolve([]));
+exports.replaceRecipe = async (dishId, rows, trx) => {
+  await trx('recipes').where({ dish_id: dishId }).del();
+  for (const row of rows) await trx('recipes').insert({ ...row, dish_id: dishId });
+};    

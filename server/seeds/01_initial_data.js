@@ -51,7 +51,7 @@ exports.seed = async (knex) => {
 
   // Settings
   await knex('settings').insert([
-    { key: 'restaurant_name', value: 'Restoran Banaadir' },
+    { key: 'restaurant_name', value: 'Som Restaurant RTO' },
     { key: 'service_charge_pct', value: '5' },
     { key: 'currency', value: 'USD' },
   ]);
@@ -80,11 +80,11 @@ exports.seed = async (knex) => {
   // Ingredients (name_en, name_so, unit, cost, stock, min)
   const ingData = [
     ['Rice', 'Bariis', 'kg', 1.2, 50, 10],
-    ['Goat meat', 'Hilib riyo', 'kg', 7.0, 30, 5],
+    ['Goat meat', 'Hilib Ari', 'kg', 7.0, 30, 5],
     ['Camel meat', 'Hilib geel', 'kg', 6.5, 25, 5],
     ['Chicken', 'Digaag', 'kg', 4.5, 30, 5],
     ['Oil', 'Saliid', 'L', 3.0, 20, 3],
-    ['Onion', 'Basal', 'kg', 1.0, 15, 3],
+    ['detail', 'Basal', 'kg', 1.0, 15, 3],
     ['Flour', 'Bur', 'kg', 0.9, 25, 5],
     ['Eggs', 'Ukun', 'pcs', 0.2, 120, 24],
     ['Milk', 'Caano', 'L', 1.1, 40, 8],
@@ -128,10 +128,10 @@ exports.seed = async (knex) => {
 
   // Recipes: dish -> [[ingredient, qty per portion]]
   const recipes = {
-    'Fried eggs': [['Eggs', 2], ['Oil', 0.01], ['Onion', 0.02]],
+    'Fried eggs': [['Eggs', 2], ['Oil', 0.01], ['detail', 0.02]],
     'Canjeero with sugar': [['Flour', 0.1], ['Oil', 0.01], ['Sugar', 0.02]],
-    'Rice with meat': [['Rice', 0.25], ['Oil', 0.02], ['Onion', 0.05]],
-    'Chicken pasta': [['Pasta', 0.2], ['Chicken', 0.15], ['Oil', 0.02], ['Onion', 0.05]],
+    'Rice with meat': [['Rice', 0.25], ['Oil', 0.02], ['detail', 0.05]],
+    'Chicken pasta': [['Pasta', 0.2], ['Chicken', 0.15], ['Oil', 0.02], ['detail', 0.05]],
     'Milk tea': [['Tea leaves', 0.005], ['Milk', 0.15], ['Sugar', 0.02]],
     'Banana juice': [['Banana', 0.25], ['Sugar', 0.02], ['Milk', 0.1]],
     'Lemon juice': [['Lemon', 2], ['Sugar', 0.03]],
@@ -159,7 +159,7 @@ exports.seed = async (knex) => {
     [meatGroup, 'Geel', 'Camel', 0.5, 'Camel meat', 0.2],
     [meatGroup, 'Digaag', 'Chicken', 0, 'Chicken', 0.2],
     [extrasGroup, 'Bariis dheeraad', 'Extra rice', 1.0, 'Rice', 0.15],
-    [extrasGroup, 'Basal la\'aan', 'No onions', 0, null, 0],
+    [extrasGroup, 'fahfahin', 'No details', 0, null, 0],
   ];
   for (const [group_id, name_so, name_en, price_delta, ingName, qty] of mods) {
     const [modId] = await knex('modifiers').insert({ group_id, name_so, name_en, price_delta });
