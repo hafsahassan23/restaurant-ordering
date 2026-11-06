@@ -18,6 +18,9 @@ app.use('/api/public', require('./routes/publicRoutes'));
 app.use('/api', require('./routes/orderRoutes'));           
 app.use('/api/stock', require('./routes/stockRoutes'));    
 
+app.use('/api/bills', require('./routes/billRoutes'));          
+app.use('/api/sms-outbox', require('./routes/smsRoutes'));      
+
 // General rate limit for the whole API (login has a stricter one of its own)
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,

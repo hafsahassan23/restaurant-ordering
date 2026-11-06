@@ -17,9 +17,9 @@ async function insertMap(knex, table, rows, key) {
 
 exports.seed = async (knex) => {
   // Delete in reverse dependency order so foreign keys do not block us
-  const clearOrder = [
-    'settings', 'sms_outbox', 'audit_logs', 'payments', 'bill_splits', 'bills',
-    'stock_movements', 'order_item_modifiers', 'order_items', 'orders',
+   const clearOrder = [
+    'settings', 'sms_outbox', 'audit_logs', 'payments', 'bill_splits',
+    'stock_movements', 'order_item_modifiers', 'order_items', 'orders', 'bills',
     'modifier_ingredients', 'recipes', 'ingredients', 'modifiers', 'modifier_groups',
     'dishes', 'menu_categories', 'dining_tables', 'users', 'roles',
   ];

@@ -115,6 +115,9 @@ async function confirmInTrx(orderId, user, trx) {
  * A waiter entering an order directly uses autoConfirm = true (one atomic transaction).
  */
 exports.createOrder = async ({ table, items, user = null, autoConfirm = false, ip = null }) => {
+  
+  if (table.status === 'paying') throw new AppError(409, 'The bill is being paid', 'TABLE_PAYING');
+
   if (table.is_closed) throw new AppError(403, 'Please ask a waiter', 'TABLE_CLOSED');
   if (user) assertOwnsTable(user, table);
 
