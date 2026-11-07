@@ -28,7 +28,7 @@ export default {
   },
     customer: {
     table: 'Miiska', add: 'Ku dar dalabka', cart: 'Dalabkaaga', send: 'Dir dalabka', sending: 'Waa la dirayaa...',
-    total: 'Wadarta', notes: 'Faallo', notesHint: "Tusaale: faahfaahin", quantity: 'Tirada',
+    total: 'Wadarta', notes: 'Faallo', notesHint: "Tusaale: Fahfaahin", quantity: 'Tirada',
     required: 'Qasab', optional: 'Ikhtiyaari', chooseOne: 'Dooro mid', chooseUpTo: 'Dooro ilaa {{n}}',
     unavailable: 'Hadda lama heli karo', closed: 'Fadlan weydii waiter-ka',
     invalidTable: 'Koodhkan miiska ma shaqeynayo. Fadlan weydii waiter-ka.',

@@ -23,6 +23,9 @@ app.use('/api/sms-outbox', require('./routes/smsRoutes'));
 
 app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/menu-admin', require('./routes/menuAdminRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/admin/tables', require('./routes/tableAdminRoutes'));
+app.use('/api/menu-admin', require('./routes/catalogRoutes')); // second router on the same prefix
 
 // General rate limit for the whole API (login has a stricter one of its own)
 const apiLimiter = rateLimit({

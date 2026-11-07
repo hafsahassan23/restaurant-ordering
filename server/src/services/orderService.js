@@ -228,3 +228,40 @@ exports.pendingOrders = async () => views(await orderRepository.pendingIds());
 /** Used by the kitchen screen, and to reload everything after a reconnect. */
 exports.kitchenOrders = async () => views(await orderRepository.kitchenIds());
 exports.ordersForTable = async (tableId) => views(await orderRepository.tableOrderIds(tableId));
+/**
+ * Move a whole order to another table (customers changed seats).
+ * Rules: not billed yet, target table open and not being paid, a waiter must own both tables.
+ */
+exports.moveOrder = async (orderId, toTableId, user, ip) => {
+  const info = await db.transaction(async (trx) => {
+    const order = await orderRepository.lockOrder(orderId, trx);
+    if (!order) throw new AppError(404, 'Order not found', 'NOT_FOUND');
+    if (order.status === 'closed' || order.bill_id) {
+      throw new AppError(409, 'This order can no longer be moved', 'BAD_STATE');
+    }
+    if (order.table_id === toTableId) throw new AppError(400, 'Choose a different table', 'SAME_TABLE');
+
+    const from = await tableRepository.findById(order.table_id, trx);
+    const to = await tableRepository.findById(toTableId, trx);
+    if (!to) throw new AppError(404, 'Table not found', 'TABLE_NOT_FOUND');
+    assertOwnsTable(user, from);
+    assertOwnsTable(user, to);
+    if (to.is_closed) throw new AppError(409, 'The target table is closed', 'TABLE_CLOSED');
+    if (to.status === 'paying') throw new AppError(409, 'The target table has an open bill', 'TABLE_PAYING');
+
+    await orderRepository.updateOrder(orderId, { table_id: toTableId }, trx);
+    await refreshTableStatus(from.id, trx);
+    await refreshTableStatus(to.id, trx);
+    return { fromId: from.id, toId: to.id, fromNumber: from.number, toNumber: to.number };
+  });
+
+  await auditService.log({
+    userId: user.id, action: 'ORDER_MOVED', entity: 'order', entityId: orderId,
+    details: { from: info.fromNumber, to: info.toNumber }, ip,
+  });
+  const view = await publishOrder(orderId, 'order:moved'); // waiters + the new table's phones
+  realtime.emit(`table:${info.fromId}`, 'order:moved', view); // phones at the old table
+  realtime.emit('kitchen', 'order:moved', view);             // the kitchen card shows the new table number
+  await emitTable(info.fromId);
+  return view;
+};

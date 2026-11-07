@@ -244,3 +244,7 @@ exports.setServiceCharge = async (pct, user, ip) => {
   await auditService.log({ userId: user.id, action: 'SERVICE_CHARGE_CHANGED', entity: 'setting', details: { pct }, ip });
   return pct;
 };
+
+/** Recent bills (open or paid) so receipts can be shown again. */
+exports.listBills = async ({ status, limit }) =>
+  (await billRepository.list({ status, limit })).map((b) => ({ ...b, total: Number(b.total) }));

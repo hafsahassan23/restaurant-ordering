@@ -52,5 +52,9 @@ router.post('/items/:id/cancel', authenticate, authorize('manager'), async (req,
   const { reason } = z.object({ reason: z.string().min(3).max(255) }).parse(req.body);
   res.json(await orderService.cancelItem(idParam(req.params.id), reason, req.user, req.ip));
 });
-
+/** POST /api/orders/:id/move { toTableId } -> move the whole order to another table */
+router.post('/orders/:id/move', authenticate, authorize('waiter', 'manager'), async (req, res) => {
+  const { toTableId } = z.object({ toTableId: z.number().int().positive() }).parse(req.body);
+  res.json(await orderService.moveOrder(idParam(req.params.id), toTableId, req.user, req.ip));
+});
 module.exports = router;

@@ -60,5 +60,12 @@ router.post('/:id/payments', authenticate, authorize('cashier', 'manager'), asyn
   const body = paySchema.parse(req.body);
   res.status(201).json(await billService.pay(idParam(req.params.id), body, req.user, req.ip));
 });
-
+/** GET /api/bills?status=paid&limit=50 -> recent bills (cashier, manager) */
+router.get('/', authenticate, authorize('cashier', 'manager'), async (req, res) => {
+  const query = z.object({
+    status: z.enum(['open', 'paid']).optional(),
+    limit: z.coerce.number().int().min(1).max(200).default(50),
+  }).parse(req.query);
+  res.json(await billService.listBills(query));
+});
 module.exports = router;

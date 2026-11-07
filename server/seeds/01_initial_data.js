@@ -84,7 +84,7 @@ exports.seed = async (knex) => {
     ['Camel meat', 'Hilib geel', 'kg', 6.5, 25, 5],
     ['Chicken', 'Digaag', 'kg', 4.5, 30, 5],
     ['Oil', 'Saliid', 'L', 3.0, 20, 3],
-    ['detail', 'Basal', 'kg', 1.0, 15, 3],
+    ['detail', 'Fahfaahin', 'kg', 1.0, 15, 3],
     ['Flour', 'Bur', 'kg', 0.9, 25, 5],
     ['Eggs', 'Ukun', 'pcs', 0.2, 120, 24],
     ['Milk', 'Caano', 'L', 1.1, 40, 8],

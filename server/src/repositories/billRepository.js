@@ -61,3 +61,13 @@ exports.paidTotal = async (billId, trx = db) => {
   const r = await trx('payments').where({ bill_id: billId }).sum({ s: 'amount' }).first();
   return Number(r.s || 0);
 };
+exports.list = ({ status, limit }) => {
+  const query = db('bills')
+    .join('dining_tables', 'bills.table_id', 'dining_tables.id')
+    .select('bills.id', 'bills.status', 'bills.total', 'bills.created_at', 'bills.updated_at',
+      'dining_tables.number as table_number')
+    .orderBy('bills.id', 'desc')
+    .limit(limit);
+  if (status) query.where('bills.status', status);
+  return query;
+};
