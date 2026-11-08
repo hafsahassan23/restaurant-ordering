@@ -1,20 +1,23 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import Layout from "../components/Layout.jsx";
-import ManagerNav from "../components/ManagerNav.jsx";
+import { Alert, Badge, Button, Card, PageHeader } from "../components/ui.jsx";
+import CategoryModal from "../components/menu/CategoryModal.jsx";
+import DishModal from "../components/menu/DishModal.jsx";
+import RecipeModal from "../components/menu/RecipeModal.jsx";
+import ModifiersModal from "../components/menu/ModifiersModal.jsx";
 import { api } from "../lib/api";
+import { errorText } from "../lib/errors";
 import { money, pick } from "../lib/format";
 
-const input = "h-11 rounded-xl border border-line bg-white px-3";
-
+/** Manager: categories, dishes (create/edit/delete), Available switch, override, recipes and choices. */
 export default function MenuAdmin() {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
   const [menu, setMenu] = useState([]);
   const [ingredients, setIngredients] = useState([]);
   const [version, setVersion] = useState(0);
-  const [openId, setOpenId] = useState(null);
-  const [rows, setRows] = useState([]);
+  const [modal, setModal] = useState(null); // { kind: 'category' | 'dish' | 'recipe' | 'options', data, categoryId }
   const [error, setError] = useState("");
   const [msg, setMsg] = useState("");
 
@@ -33,208 +36,210 @@ export default function MenuAdmin() {
     };
   }, [version]);
 
-  const fail = (e) =>
-    setError(
-      t(`menuAdmin.err.${e.code}`, {
-        defaultValue: t("menuAdmin.err.generic"),
-      }),
-    );
+  const reload = () => setVersion((v) => v + 1);
+  const close = () => setModal(null);
+  const saved = (message) => {
+    close();
+    setError("");
+    setMsg(message || t("menuAdmin.saved"));
+    reload();
+  };
 
-  async function flag(dish, patch) {
+  async function run(fn, confirmFirst = false) {
+    if (confirmFirst && !window.confirm(t("menuAdmin.confirmDelete"))) return;
     setError("");
     setMsg("");
     try {
-      await api(`/menu-admin/dishes/${dish.id}`, {
-        method: "PATCH",
-        body: patch,
-      });
-      setVersion((v) => v + 1);
-    } catch (e) {
-      fail(e);
+      await fn();
+      reload();
+    } catch (err) {
+      setError(errorText(t, "menuAdmin", err));
     }
   }
 
-  async function openRecipe(dish) {
-    setError("");
-    setMsg("");
-    const recipe = await api(`/menu-admin/dishes/${dish.id}/recipe`);
-    setRows(
-      recipe.map((r) => ({
-        ingredientId: String(r.ingredient_id),
-        qty: String(Number(r.qty_per_portion)),
-      })),
+  const flag = (d, patch) =>
+    run(() =>
+      api(`/menu-admin/dishes/${d.id}`, { method: "PATCH", body: patch }),
     );
-    setOpenId(dish.id);
-  }
-
-  async function saveRecipe() {
-    setError("");
-    try {
-      const items = rows
-        .filter((r) => r.ingredientId && Number(r.qty) > 0)
-        .map((r) => ({
-          ingredientId: Number(r.ingredientId),
-          qty: Number(r.qty),
-        }));
-      await api(`/menu-admin/dishes/${openId}/recipe`, {
-        method: "PUT",
-        body: { items },
-      });
-      setMsg(t("menuAdmin.saved"));
-      setVersion((v) => v + 1);
-    } catch (e) {
-      fail(e);
-    }
-  }
-
-  const setRow = (i, patch) =>
-    setRows((rs) => rs.map((r, k) => (k === i ? { ...r, ...patch } : r)));
+  const removeDish = (d) =>
+    run(() => api(`/menu-admin/dishes/${d.id}`, { method: "DELETE" }), true);
+  const removeCategory = (c) =>
+    run(
+      () => api(`/menu-admin/categories/${c.id}`, { method: "DELETE" }),
+      true,
+    );
 
   return (
     <Layout>
-      <ManagerNav />
-      <h1 className="mb-3 text-2xl font-bold">{t("menuAdmin.title")}</h1>
-      {error && (
-        <div
-          role="alert"
-          className="mb-3 rounded-xl bg-red-50 p-3 text-red-800"
+      <PageHeader
+        title={t("menuAdmin.title")}
+        subtitle={t("menuAdmin.subtitle")}
+      >
+        <Button
+          variant="secondary"
+          onClick={() => setModal({ kind: "category" })}
         >
-          {error}
-        </div>
-      )}
-      {msg && (
-        <div className="mb-3 rounded-xl bg-green-50 p-3 text-green-900">
-          {msg}
-        </div>
-      )}
+          + {t("menuAdmin.addCategory")}
+        </Button>
+        <Button
+          onClick={() => setModal({ kind: "dish" })}
+          disabled={menu.length === 0}
+        >
+          + {t("menuAdmin.addDish")}
+        </Button>
+      </PageHeader>
+      {msg && <Alert tone="success">{msg}</Alert>}
+      {error && <Alert>{error}</Alert>}
 
       {menu.map((cat) => (
         <section key={cat.id} className="mb-6">
-          <h2 className="mb-2 text-xl font-bold">{pick(cat, "name", lang)}</h2>
-          <div className="space-y-2">
-            {cat.dishes.map((d) => (
-              <div
-                key={d.id}
-                className="rounded-2xl border border-line bg-white p-4"
+          <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+            <h2 className="text-xl font-bold">{pick(cat, "name", lang)}</h2>
+            <div className="flex gap-2">
+              <Button
+                variant="secondary"
+                onClick={() => setModal({ kind: "dish", categoryId: cat.id })}
               >
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <div className="text-lg font-semibold">
-                      {pick(d, "name", lang)} · {money(d.price)}
-                    </div>
-                    <span
-                      className={`mt-1 inline-block rounded-full px-3 py-1 text-sm font-semibold ${d.available ? "bg-free text-white" : "bg-slate-300 text-slate-900"}`}
-                    >
+                + {t("menuAdmin.addDish")}
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => setModal({ kind: "category", data: cat })}
+              >
+                {t("common.edit")}
+              </Button>
+              <Button variant="ghost" onClick={() => removeCategory(cat)}>
+                {t("common.delete")}
+              </Button>
+            </div>
+          </div>
+
+          {cat.dishes.length === 0 && (
+            <p className="text-slate-600">{t("menuAdmin.emptyCategory")}</p>
+          )}
+          <div className="space-y-3">
+            {cat.dishes.map((d) => (
+              <Card key={d.id} className="flex flex-wrap items-center gap-4">
+                {d.photo_url ? (
+                  <img
+                    src={d.photo_url}
+                    alt=""
+                    className="h-16 w-16 shrink-0 rounded-xl object-cover"
+                  />
+                ) : (
+                  <div
+                    className="grid h-16 w-16 shrink-0 place-items-center rounded-xl bg-surface text-3xl"
+                    aria-hidden="true"
+                  >
+                    🍲
+                  </div>
+                )}
+                <div className="min-w-48 flex-1">
+                  <div className="text-lg font-semibold">
+                    {pick(d, "name", lang)}
+                  </div>
+                  <div className="text-sm text-slate-600">
+                    {money(d.price)} · ⏱ {d.prep_minutes}{" "}
+                    {t("customer.minutes")}
+                  </div>
+                  <div className="mt-1">
+                    <Badge tone={d.available ? "green" : "gray"}>
                       {d.available
                         ? t("menuAdmin.available")
                         : t(`menuAdmin.reasons.${d.unavailable_reason}`)}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-4">
-                    <label className="flex min-h-11 items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="h-5 w-5"
-                        checked={d.is_available}
-                        onChange={(e) =>
-                          flag(d, { is_available: e.target.checked })
-                        }
-                      />
-                      {t("menuAdmin.available")}
-                    </label>
-                    <label className="flex min-h-11 items-center gap-2">
-                      <input
-                        type="checkbox"
-                        className="h-5 w-5"
-                        checked={d.force_unavailable}
-                        onChange={(e) =>
-                          flag(d, { force_unavailable: e.target.checked })
-                        }
-                      />
-                      {t("menuAdmin.force")}
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        openId === d.id ? setOpenId(null) : openRecipe(d)
-                      }
-                      className="h-11 rounded-xl border border-line px-4 font-semibold"
-                    >
-                      {openId === d.id
-                        ? t("menuAdmin.hide")
-                        : t("menuAdmin.recipe")}
-                    </button>
+                    </Badge>
                   </div>
                 </div>
-
-                {openId === d.id && (
-                  <div className="mt-4 space-y-2 border-t border-line pt-4">
-                    {rows.map((r, i) => (
-                      <div key={i} className="flex flex-wrap gap-2">
-                        <select
-                          value={r.ingredientId}
-                          onChange={(e) =>
-                            setRow(i, { ingredientId: e.target.value })
-                          }
-                          className={`${input} min-w-48 flex-1`}
-                          aria-label={t("menuAdmin.ingredient")}
-                        >
-                          <option value="" />
-                          {ingredients.map((ing) => (
-                            <option key={ing.id} value={ing.id}>
-                              {pick(ing, "name", lang)} ({ing.unit})
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="number"
-                          step="0.001"
-                          min="0"
-                          value={r.qty}
-                          onChange={(e) => setRow(i, { qty: e.target.value })}
-                          placeholder={t("menuAdmin.qtyPerPortion")}
-                          className={`${input} w-40`}
-                        />
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setRows((rs) => rs.filter((_, k) => k !== i))
-                          }
-                          className="h-11 w-11 rounded-xl border border-line"
-                          aria-label={t("common.delete")}
-                        >
-                          ×
-                        </button>
-                      </div>
-                    ))}
-                    <div className="flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setRows((rs) => [
-                            ...rs,
-                            { ingredientId: "", qty: "" },
-                          ])
-                        }
-                        className="h-11 rounded-xl border border-line px-4 font-semibold"
-                      >
-                        + {t("menuAdmin.addIngredient")}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={saveRecipe}
-                        className="h-11 rounded-xl bg-brand px-5 font-semibold text-white"
-                      >
-                        {t("menuAdmin.saveRecipe")}
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
+                <div className="flex flex-wrap items-center gap-4">
+                  <label className="flex min-h-11 items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5"
+                      checked={d.is_available}
+                      onChange={(e) =>
+                        flag(d, { is_available: e.target.checked })
+                      }
+                    />
+                    {t("menuAdmin.available")}
+                  </label>
+                  <label className="flex min-h-11 items-center gap-2">
+                    <input
+                      type="checkbox"
+                      className="h-5 w-5"
+                      checked={d.force_unavailable}
+                      onChange={(e) =>
+                        flag(d, { force_unavailable: e.target.checked })
+                      }
+                    />
+                    {t("menuAdmin.force")}
+                  </label>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant="secondary"
+                    onClick={() => setModal({ kind: "recipe", data: d })}
+                  >
+                    {t("menuAdmin.recipe")}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setModal({ kind: "options", data: d })}
+                  >
+                    {t("menuAdmin.options")}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setModal({ kind: "dish", data: d })}
+                  >
+                    {t("common.edit")}
+                  </Button>
+                  <Button variant="ghost" onClick={() => removeDish(d)}>
+                    {t("common.delete")}
+                  </Button>
+                </div>
+              </Card>
             ))}
           </div>
         </section>
       ))}
+
+      {modal?.kind === "category" && (
+        <CategoryModal
+          category={modal.data}
+          onClose={close}
+          onSaved={() => saved()}
+        />
+      )}
+      {modal?.kind === "dish" && (
+        <DishModal
+          dish={modal.data}
+          categories={menu}
+          defaultCategoryId={modal.categoryId}
+          lang={lang}
+          onClose={close}
+          onSaved={saved}
+        />
+      )}
+      {modal?.kind === "recipe" && (
+        <RecipeModal
+          dish={modal.data}
+          ingredients={ingredients}
+          lang={lang}
+          onClose={close}
+          onSaved={() => saved()}
+        />
+      )}
+      {modal?.kind === "options" && (
+        <ModifiersModal
+          dish={modal.data}
+          ingredients={ingredients}
+          lang={lang}
+          onClose={() => {
+            close();
+            reload();
+          }}
+        />
+      )}
     </Layout>
   );
 }

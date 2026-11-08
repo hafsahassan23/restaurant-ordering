@@ -27,6 +27,7 @@ export default function Receipt({ bill, onClose }) {
           <h2 className="text-center text-lg font-bold">
             {bill.restaurant_name}
           </h2>
+          <p className="text-center">{bill.restaurant_city}</p>
           <p className="text-center font-semibold">{bi("cashier.receipt")}</p>
           <p className="text-center">
             {bi("waiter.table")} {bill.table_number} ·{" "}

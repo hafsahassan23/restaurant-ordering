@@ -1,13 +1,26 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { useAuth } from "../context/AuthContext.jsx";
 import Layout from "../components/Layout.jsx";
 import StatusChip from "../components/StatusChip.jsx";
+import TableModal from "../components/TableModal.jsx";
+import { Tabs } from "../components/Tabs.jsx";
+import { Alert, Button, Card } from "../components/ui.jsx";
 import { api } from "../lib/api";
+import { errorText } from "../lib/errors";
 import { staffSocket } from "../lib/socket";
 import { pick } from "../lib/format";
 import { beep } from "../lib/beep";
 
+const BORDER = {
+  free: "border-free",
+  ordering: "border-ordering",
+  waiting_food: "border-waiting",
+  eating: "border-eating",
+  paying: "border-paying",
+};
+
+/** Waiter: floor map by area, orders waiting for confirmation, and "Ready" alerts from the kitchen. */
 export default function Waiter() {
   const { t, i18n } = useTranslation();
   const lang = i18n.language;
@@ -15,52 +28,63 @@ export default function Waiter() {
   const [tables, setTables] = useState([]);
   const [pending, setPending] = useState([]);
   const [ready, setReady] = useState([]);
+  const [tab, setTab] = useState("tables");
+  const [selectedId, setSelectedId] = useState(null);
+  const [version, setVersion] = useState(0);
   const [error, setError] = useState("");
 
-  const load = useCallback(async () => {
-    try {
-      const [tb, pd, kitchen] = await Promise.all([
-        api("/tables"),
-        api("/orders/pending"),
-        api("/kitchen/orders"),
-      ]);
-      setTables(tb);
-      setPending(pd);
-      setReady(
-        kitchen.flatMap((o) =>
-          o.items
-            .filter((i) => i.status === "ready")
-            .map((i) => ({
-              ...i,
-              table_id: o.table_id,
-              table_number: o.table_number,
-            })),
-        ),
-      );
-    } catch {
-      setError(t("common.error"));
-    }
-  }, [t]);
+  useEffect(() => {
+    let cancelled = false;
+    Promise.all([
+      api("/tables"),
+      api("/orders/pending"),
+      api("/kitchen/orders"),
+    ])
+      .then(([tb, pd, kitchen]) => {
+        if (cancelled) return;
+        setTables(tb);
+        setPending(pd);
+        setReady(
+          kitchen.flatMap((o) =>
+            o.items
+              .filter((i) => i.status === "ready")
+              .map((i) => ({
+                ...i,
+                table_id: o.table_id,
+                table_number: o.table_number,
+              })),
+          ),
+        );
+      })
+      .catch(() => {
+        if (!cancelled) setError(t("common.error"));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [version, t]);
 
   useEffect(() => {
     const socket = staffSocket(localStorage.getItem("token"));
-    socket.on("connect", load); // first load happens on connect, and again after every reconnect
+    const bump = () => setVersion((v) => v + 1);
     [
+      "connect",
       "order:confirmed",
       "order:rejected",
+      "order:moved",
       "item:updated",
       "table:updated",
-    ].forEach((e) => socket.on(e, load));
+    ].forEach((e) => socket.on(e, bump));
     socket.on("order:pending", () => {
       beep();
-      load();
+      bump();
     });
     socket.on("item:ready", () => {
       beep();
-      load();
+      bump();
     });
     return () => socket.disconnect();
-  }, [load]);
+  }, []);
 
   const isMine = (tableId) => {
     const tb = tables.find((x) => x.id === tableId);
@@ -75,11 +99,9 @@ export default function Waiter() {
     try {
       await fn();
     } catch (e) {
-      setError(
-        e.code === "INSUFFICIENT_STOCK" ? t("waiter.noStock") : e.message,
-      );
+      setError(errorText(t, "waiter", e));
     }
-    load();
+    setVersion((v) => v + 1);
   }
 
   const confirm = (o) =>
@@ -94,132 +116,169 @@ export default function Waiter() {
       }),
     );
 
-  const btn = "h-12 rounded-xl px-5 font-semibold disabled:opacity-40";
+  const areas = useMemo(() => {
+    const map = new Map();
+    tables.forEach((tb) => {
+      if (!map.has(tb.area)) map.set(tb.area, []);
+      map.get(tb.area).push(tb);
+    });
+    return [...map.entries()];
+  }, [tables]);
+
+  const selected = tables.find((x) => x.id === selectedId) || null;
 
   return (
     <Layout>
-      {error && (
-        <div
-          role="alert"
-          className="mb-4 rounded-xl bg-red-50 p-3 text-red-800"
-        >
-          {error}
-        </div>
-      )}
+      <Tabs
+        value={tab}
+        onChange={setTab}
+        tabs={[
+          { id: "tables", label: t("waiter.tabTables") },
+          {
+            id: "pending",
+            label: t("waiter.tabPending"),
+            count: pending.filter((o) => isMine(o.table_id)).length,
+          },
+          {
+            id: "ready",
+            label: t("waiter.tabReady"),
+            count: ready.filter((i) => isMine(i.table_id)).length,
+          },
+        ]}
+      />
+      {error && <Alert>{error}</Alert>}
 
-      <h2 className="mb-2 text-xl font-bold">{t("waiter.ready")}</h2>
-      {ready.length === 0 && (
-        <p className="mb-6 text-slate-600">{t("waiter.noReady")}</p>
-      )}
-      <div className="mb-6 grid gap-3 sm:grid-cols-2">
-        {ready.map((i) => (
-          <div
-            key={i.id}
-            className="flex items-center justify-between gap-3 rounded-xl border-2 border-free bg-green-50 p-4"
-          >
-            <div>
-              <div className="font-bold">
-                {t("waiter.table")} {i.table_number}
-              </div>
-              <div>
-                {i.quantity} × {pick(i, "dish_name", lang)}
-              </div>
-            </div>
-            <button
-              type="button"
-              disabled={!isMine(i.table_id)}
-              onClick={() => serve(i)}
-              className={`${btn} bg-free text-white`}
-            >
-              {t("waiter.serve")}
-            </button>
-          </div>
-        ))}
-      </div>
-
-      <h2 className="mb-2 text-xl font-bold">{t("waiter.pending")}</h2>
-      {pending.length === 0 && (
-        <p className="mb-6 text-slate-600">{t("waiter.noPending")}</p>
-      )}
-      <div className="mb-6 grid gap-3 sm:grid-cols-2">
-        {pending.map((o) => (
-          <div
-            key={o.id}
-            className="rounded-xl border border-line bg-white p-4"
-          >
-            <div className="text-lg font-bold">
-              {t("waiter.table")} {o.table_number}
-            </div>
-            <ul className="mt-2 space-y-1 text-sm">
-              {o.items.map((i) => (
-                <li key={i.id}>
-                  <span className="font-semibold">
-                    {i.quantity} × {pick(i, "dish_name", lang)}
-                  </span>
-                  {i.modifiers.length > 0 && (
-                    <span>
-                      {" "}
-                      (
-                      {i.modifiers.map((m) => pick(m, "name", lang)).join(", ")}
-                      )
-                    </span>
-                  )}
-                  {i.notes && (
-                    <div className="rounded bg-yellow-100 px-2 py-1">
-                      {i.notes}
+      {tab === "tables" &&
+        areas.map(([area, list]) => (
+          <section key={area} className="mb-6">
+            <h2 className="mb-2 text-lg font-bold text-slate-700">{area}</h2>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+              {list.map((tb) => {
+                const mine = isMine(tb.id);
+                return (
+                  <button
+                    key={tb.id}
+                    type="button"
+                    onClick={() => setSelectedId(tb.id)}
+                    className={`rounded-2xl border-2 bg-white p-4 text-left shadow-sm transition hover:shadow ${BORDER[tb.status]} ${mine ? "" : "opacity-75"}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-3xl font-bold">{tb.number}</span>
+                      <span aria-hidden="true">{mine ? "" : "🔒"}</span>
                     </div>
-                  )}
-                </li>
-              ))}
-            </ul>
-            <div className="mt-3 flex gap-2">
-              <button
-                type="button"
-                disabled={!isMine(o.table_id)}
-                onClick={() => confirm(o)}
-                className={`${btn} flex-1 bg-brand text-white`}
-              >
-                {t("waiter.confirm")}
-              </button>
-              <button
-                type="button"
-                disabled={!isMine(o.table_id)}
-                onClick={() => reject(o)}
-                className={`${btn} border border-line bg-white`}
-              >
-                {t("waiter.reject")}
-              </button>
+                    <div className="text-sm text-slate-600">
+                      {tb.seats} {t("waiter.seats")}
+                    </div>
+                    <div className="mt-2">
+                      <StatusChip kind="table" status={tb.status} />
+                    </div>
+                    <div className="mt-1 truncate text-xs text-slate-600">
+                      {mine
+                        ? t("waiter.mine")
+                        : tb.waiter_name || t("waiter.others")}
+                    </div>
+                  </button>
+                );
+              })}
             </div>
-          </div>
+          </section>
         ))}
-      </div>
 
-      <h2 className="mb-2 text-xl font-bold">{t("waiter.tables")}</h2>
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        {tables.map((tb) => {
-          const mine = isMine(tb.id);
-          return (
-            <div
-              key={tb.id}
-              className={`rounded-xl border-2 bg-white p-4 ${mine ? "border-brand" : "border-line opacity-80"}`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="text-2xl font-bold">{tb.number}</span>
-                <span aria-hidden="true">{mine ? "" : "🔒"}</span>
+      {tab === "pending" && (
+        <>
+          {pending.length === 0 && (
+            <p className="text-slate-600">{t("waiter.noPending")}</p>
+          )}
+          <div className="grid gap-3 md:grid-cols-2">
+            {pending.map((o) => (
+              <Card key={o.id}>
+                <div className="text-lg font-bold">
+                  {t("waiter.table")} {o.table_number}
+                </div>
+                <ul className="mt-2 space-y-1 text-sm">
+                  {o.items.map((i) => (
+                    <li key={i.id}>
+                      <span className="font-semibold">
+                        {i.quantity} × {pick(i, "dish_name", lang)}
+                      </span>
+                      {i.modifiers.length > 0 && (
+                        <span>
+                          {" "}
+                          (
+                          {i.modifiers
+                            .map((m) => pick(m, "name", lang))
+                            .join(", ")}
+                          )
+                        </span>
+                      )}
+                      {i.notes && (
+                        <div className="rounded bg-yellow-100 px-2 py-1">
+                          {i.notes}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-3 flex gap-2">
+                  <Button
+                    disabled={!isMine(o.table_id)}
+                    onClick={() => confirm(o)}
+                    className="flex-1"
+                  >
+                    {t("waiter.confirm")}
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    disabled={!isMine(o.table_id)}
+                    onClick={() => reject(o)}
+                  >
+                    {t("waiter.reject")}
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </>
+      )}
+
+      {tab === "ready" && (
+        <>
+          {ready.length === 0 && (
+            <p className="text-slate-600">{t("waiter.noReady")}</p>
+          )}
+          <div className="grid gap-3 sm:grid-cols-2">
+            {ready.map((i) => (
+              <div
+                key={i.id}
+                className="flex items-center justify-between gap-3 rounded-2xl border-2 border-free bg-green-50 p-4"
+              >
+                <div>
+                  <div className="font-bold">
+                    {t("waiter.table")} {i.table_number}
+                  </div>
+                  <div>
+                    {i.quantity} × {pick(i, "dish_name", lang)}
+                  </div>
+                </div>
+                <Button disabled={!isMine(i.table_id)} onClick={() => serve(i)}>
+                  {t("waiter.serve")}
+                </Button>
               </div>
-              <div className="text-sm text-slate-600">
-                {tb.area} · {tb.seats} {t("waiter.seats")}
-              </div>
-              <div className="mt-2">
-                <StatusChip kind="table" status={tb.status} />
-              </div>
-              <div className="mt-1 text-xs text-slate-600">
-                {mine ? t("waiter.mine") : t("waiter.others")}
-              </div>
-            </div>
-          );
-        })}
-      </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {selected && (
+        <TableModal
+          table={selected}
+          tables={tables}
+          user={user}
+          version={version}
+          onClose={() => setSelectedId(null)}
+          onChanged={() => setVersion((v) => v + 1)}
+        />
+      )}
     </Layout>
   );
 }

@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { ZodError } = require('zod');
 const AppError = require('./utils/AppError');
+const origins = require('./origins');
 
 const app = express();
 
@@ -25,7 +26,11 @@ app.use('/api/reports', require('./routes/reportRoutes'));
 app.use('/api/menu-admin', require('./routes/menuAdminRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/admin/tables', require('./routes/tableAdminRoutes'));
-app.use('/api/menu-admin', require('./routes/catalogRoutes')); // second router on the same prefix
+app.use('/api/menu-admin', require('./routes/catalogRoutes')); 
+
+// app.js
+app.use(cors({ origin: origins }));
+
 
 // General rate limit for the whole API (login has a stricter one of its own)
 const apiLimiter = rateLimit({

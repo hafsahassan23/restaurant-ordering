@@ -12,6 +12,9 @@ import Reports from "./pages/Reports.jsx";
 import MenuAdmin from "./pages/MenuAdmin.jsx";
 import Stock from "./pages/Stock.jsx";
 import Settings from "./pages/Settings.jsx";
+import Staff from "./pages/Staff.jsx";
+import Orders from "./pages/Orders.jsx";
+import BillHistory from "./pages/BillHistory.jsx";
 
 function RootRedirect() {
   const { user, loading } = useAuth();
@@ -28,10 +31,19 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/t/:token" element={<Customer />} />
-      <Route path="/manager" element={guard("manager", <ManagerTables />)} />
+      <Route
+        path="/manager"
+        element={<Navigate to="/manager/reports" replace />}
+      />
       <Route path="/manager/reports" element={guard("manager", <Reports />)} />
+      <Route path="/manager/orders" element={guard("manager", <Orders />)} />
       <Route path="/manager/menu" element={guard("manager", <MenuAdmin />)} />
       <Route path="/manager/stock" element={guard("manager", <Stock />)} />
+      <Route
+        path="/manager/tables"
+        element={guard("manager", <ManagerTables />)}
+      />
+      <Route path="/manager/staff" element={guard("manager", <Staff />)} />
       <Route
         path="/manager/settings"
         element={guard("manager", <Settings />)}
@@ -39,6 +51,10 @@ export default function App() {
       <Route path="/waiter" element={guard("waiter", <Waiter />)} />
       <Route path="/kitchen" element={guard("kitchen", <Kitchen />)} />
       <Route path="/cashier" element={guard("cashier", <Cashier />)} />
+      <Route
+        path="/cashier/bills"
+        element={guard("cashier", <BillHistory />)}
+      />
       <Route path="/" element={<RootRedirect />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

@@ -42,6 +42,7 @@ exports.getBillView = async (billId) => {
   return {
     id: bill.id, table_id: bill.table_id, table_number: table.number, status: bill.status,
     restaurant_name: (await billRepository.getSetting('restaurant_name')) || 'Som Restaurant RTO',
+        restaurant_city: (await billRepository.getSetting('restaurant_city')) || '',
     created_at: bill.created_at, updated_at: bill.updated_at,
     subtotal: Number(bill.subtotal), service_charge_pct: Number(bill.service_charge_pct),
     service_charge: Number(bill.service_charge), total,

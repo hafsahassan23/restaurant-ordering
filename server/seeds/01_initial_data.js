@@ -54,6 +54,7 @@ exports.seed = async (knex) => {
     { key: 'restaurant_name', value: 'Som Restaurant RTO' },
     { key: 'service_charge_pct', value: '5' },
     { key: 'currency', value: 'USD' },
+    { key: 'restaurant_city', value: 'Muqdisho' },
   ]);
 
   // Tables (each with a random QR token)

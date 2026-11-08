@@ -1,0 +1,2 @@
+/** Translated text for an API error: t("<group>.err.<CODE>"), or the group's generic message. */
+export const errorText = (t, group, e) => t(`${group}.err.${e.code}`, { defaultValue: t(`${group}.err.generic`) });

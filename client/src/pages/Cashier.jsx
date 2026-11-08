@@ -6,6 +6,7 @@ import Receipt from "../components/Receipt.jsx";
 import { api } from "../lib/api";
 import { staffSocket } from "../lib/socket";
 import { money, pick } from "../lib/format";
+import { RouteTabs } from "../components/Tabs.jsx";
 
 const METHODS = ["cash", "evc_plus", "zaad", "edahab"];
 const field = "h-12 w-full rounded-xl border border-line bg-white px-4";
@@ -177,6 +178,12 @@ export default function Cashier() {
 
   return (
     <Layout>
+      <RouteTabs
+        items={[
+          { to: "/cashier", label: t("cashier.tabBills"), end: true },
+          { to: "/cashier/bills", label: t("cashier.tabHistory") },
+        ]}
+      />
       {receipt && <Receipt bill={receipt} onClose={() => setReceipt(null)} />}
       <div className="grid gap-6 md:grid-cols-3">
         <section>
