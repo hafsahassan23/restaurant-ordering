@@ -1,10 +1,27 @@
-# Som Restaurant RTO: Som Restaurant RTO
+# # Som Restaurant RTO
 
 Real-time ordering for restaurants in Somali cities. Customers order from a QR code at the table, waiters confirm, the kitchen cooks, the cashier bills. Payments and SMS are simulated. Runs on the restaurant's local network.
 Built for the Somalia 10X Challenge, Project 14. Somali and English everywhere.
 
 ## Stack
 React + Vite + Tailwind (client) · Node.js + Express (server) · MySQL/MariaDB with Knex (migrations, seeds) · Socket.IO (real-time) · JWT + bcrypt · Zod · Vitest + Supertest · GitHub Actions.
+
+## Feature Status
+
+| Feature | Status |
+|---|---|
+| QR-based customer ordering | Done |
+| Waiter order confirmation | Done |
+| Real-time kitchen updates | Done |
+| Kitchen preparation timer | Done |
+| Recipe-based stock deduction | Done |
+| Automatic dish availability | Done |
+| Modifier-based stock deduction | Done |
+| Cashier billing and payments | Done |
+| Somali and English languages | Done |
+| Sales reports and analytics | Done |
+| Dish photo upload | Done |
+| Move order to another table | Done |
 
 ## Run it
 1. Start MySQL (XAMPP) and create the database `restaurant_ordering_db` (utf8mb4_unicode_ci).
