@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Alert, Button, Field, Modal, inputCls } from "../ui.jsx";
+import { Alert, Button, Field, Modal, inputCls, selectCls } from "../ui.jsx";
 import { api } from "../../lib/api";
 import { errorText } from "../../lib/errors";
 import { pick } from "../../lib/format";
@@ -68,7 +68,7 @@ export default function DishModal({
             required
             value={form.category_id}
             onChange={set("category_id")}
-            className={inputCls}
+            className={selectCls}
           >
             {categories.map((c) => (
               <option key={c.id} value={c.id}>

@@ -1,11 +1,22 @@
 export default {
   app: { name: 'Som Restaurant RTO', tagline: 'Real-Time Ordering Management' },
   common: {
+    close: "Close",
+    language: "Language",
+
     loading: 'Loading...', save: 'Save', cancel: 'Cancel', confirm: 'Confirm',
     edit: 'Edit', delete: 'Delete', back: 'Back', logout: 'Log out',
     empty: 'Nothing here yet', error: 'Something went wrong', retry: 'Try again',
   },
   auth: {
+    welcome: "Welcome back",
+    subtitle: "Sign in with your staff account to continue.",
+    panelTitle: "Every table, waiter and kitchen in sync.",
+    panelText: "Orders go from the table to the kitchen in under a second, stock updates itself, and you see your real food cost.",
+    feature1: "Real-time orders from QR codes",
+    feature2: "Kitchen display with timers",
+    feature3: "Sales and food cost reports",
+
     username: 'Username', password: 'Password', show: 'Show', hide: 'Hide',
     submit: 'Log in', loading: 'Logging in...',
     usernameRequired: 'Username is required', usernameMin: 'Username must be at least 3 characters',
@@ -40,10 +51,20 @@ export default {
     navMenu: 'Menu', navOrders: 'My orders', navCart: 'Order', noOrders: 'You have not sent an order yet',
   },
   kitchen: {
+    items: "items",
+
+    opsLabel: "Kitchen operations", opsDesc: "Manage incoming orders and preparation progress.", activeOrders: "Active orders", tablesWaiting: "Tables waiting for the kitchen", waitingStart: "Waiting to start", inPrep: "In preparation", incoming: "Incoming orders", oldestFirst: "Oldest confirmed orders are shown first.", refresh: "Refresh", autoAppear: "New confirmed orders will appear here automatically.", prepTime: "Preparation time", notes: "Special instructions",
     title: 'Kitchen', online: 'Online', reconnecting: 'Reconnecting...', empty: 'No new orders',
     start: 'Start cooking', ready: 'Ready', min: 'min', waitingWaiter: 'Waiting for the waiter', table: 'Table',
+    notStarted: "Not started",
+preparationTime: "Preparation time",
+fresh: "Fresh",
+attention: "Attention",
+delayed: "Delayed",
   },
   waiter: {
+    mineOnly: "My tables only",
+
     tables: 'Tables', pending: 'Orders to confirm', noPending: 'No orders waiting',
     ready: 'Ready to serve', noReady: 'Nothing ready',
     confirm: 'Confirm', reject: 'Reject', serve: 'Served', mine: 'Your table', others: 'Other waiter',
@@ -52,6 +73,41 @@ export default {
     newOrder: 'Add order', openOrders: 'Table orders', noOrders: 'No orders', lockedHint: 'This table belongs to another waiter, view only',
     moveTo: 'Move to table', move: 'Move', moved: 'Order moved',
     cart: 'Order', send: 'Send order', sending: 'Sending...', emptyCart: 'Nothing selected', orderSent: 'Order sent to the kitchen',
+    dashboardLabel: "RESTAURANT OPERATIONS",
+  dashboardTitle: "Waiter Dashboard",
+  dashboardDescription: "Manage your tables, confirm customer orders and serve meals when they are ready.",
+  assignedTables: "Assigned tables",
+  occupiedCurrently: "currently occupied",
+  myTables: "My tables",
+  assignedToYou: "Assigned to you",
+  occupied: "Occupied",
+  activeTables: "Active tables",
+  pendingOrders: "Pending orders",
+  awaitingConfirmation: "Awaiting confirmation",
+  readyToServe: "Ready to serve",
+  waitingInKitchen: "Waiting in kitchen",
+  serviceManagement: "Service Management",
+  serviceManagementDescription: "Select a section to manage restaurant operations.",
+  restaurantFloor: "Restaurant Floor",
+  selectTable: "Select a table to view its details and manage service.",
+  free: "Free",
+  waiting: "Waiting",
+  paying: "Paying",
+  noTables: "No tables available",
+  tablesAppear: "Restaurant tables will appear here.",
+  tablesCount: "tables",
+  tableLabel: "TABLE",
+  assigned: "Assigned",
+  otherWaiter: "This table is assigned to another waiter.",
+  incomingOrders: "Incoming Orders",
+  reviewOrders: "Review customer orders before sending them to the kitchen.",
+  newCustomerOrder: "New customer order",
+  customerNote: "Customer note",
+  quantityLabel: "Qty",
+  kitchenReady: "Kitchen Ready",
+  collectDishes: "Collect prepared dishes and deliver them to the tables.",
+  readyItemsAppear: "Kitchen-ready items will appear here.",
+  note: "Note",
     err: {
       INSUFFICIENT_STOCK: 'Not enough stock for this dish', DISH_UNAVAILABLE: 'This dish is not available now',
       MODIFIER_UNAVAILABLE: 'This choice is not available now', MODIFIER_REQUIRED: 'Choose the required option',
@@ -64,6 +120,19 @@ export default {
     tables: 'Tables and QR', baseUrl: 'App address', print: 'Print', scan: 'Scan the QR code to order',
   },
     cashier: {
+    date: "Date",
+    items: "Items",
+    amount: "Amount",
+    payment: "Payment",
+
+    mobileHint: "A confirmation SMS is sent to this number (simulated).",
+    receiptNo: "Receipt no.",
+    reference: "Reference",
+
+    historySubtitle: "Every bill, with its receipt ready to show or print again.",
+    paidTotal: "Total paid",
+
+    posLabel: "Restaurant POS", pageTitle: "Cashier and payments", pageDesc: "Manage table bills, split payments and receipts.", activeTables: "Active tables", occupiedNow: "Tables currently occupied", selectedBalance: "Balance of the selected bill", noBillSelected: "No bill selected", selectedTable: "Selected table", chooseTable: "Choose a table to continue", selectHint: "Select an occupied table to view its bill.", selectTitle: "Select a table", selectLong: "Choose an occupied table from the list to view its bill and take payment.", currentBill: "Current bill", item: "Item", qty: "Qty", billMgmt: "Bill management", checkout: "Checkout", keepReceipt: "Please keep this receipt.",
     tables: 'Tables', noTables: 'No active tables', openBill: 'Create bill', bill: 'Bill',
     subtotal: 'Subtotal', service: 'Service charge', total: 'Total', paid: 'Paid', remaining: 'Remaining',
     splitTitle: 'Split the bill', equal: 'Equally', byItem: 'By item for each person',
@@ -89,11 +158,17 @@ export default {
     },
   },
     nav: {
+    floor: "Floor",
     tables: 'Tables and QR', reports: 'Reports', orders: 'Orders', menu: 'Menu and recipes',
     stock: 'Stock', staff: 'Staff', settings: 'Settings',
   },
     
   reports: {
+    subtitle: "Sales, kitchen speed and food cost, straight from your orders.",
+    avgTicket: "Average bill",
+    emptyTitle: "No sales in this period",
+    foodCostHint: "Ingredient cost ÷ price. Above 40% is highlighted.",
+
     title: 'Reports', from: 'From', to: 'To', apply: 'Show',
     sales: 'Total sales', bills: 'Bills', avgPrep: 'Average preparation time', minutes: 'min',
     byDish: 'Sales by dish', byCategory: 'Sales by category', daily: 'Daily sales',
@@ -101,6 +176,11 @@ export default {
     pct: 'Cost %', high: 'High', ok: 'OK', empty: 'No data for this period', error: 'Could not load the report',
   },
   menuAdmin: {
+    categories: "Categories",
+    allDishes: "All dishes",
+    availableNow: "available now",
+    search: "Search dishes",
+
     title: 'Menu and recipes', subtitle: 'Categories, dishes, choices and recipes',
     available: 'Available', force: 'Force unavailable (manager)', recipe: 'Recipe', options: 'Choices',
     ingredient: 'Ingredient', qtyPerPortion: 'Quantity per portion', addIngredient: 'Add ingredient',
@@ -131,6 +211,8 @@ export default {
     },
   },
   staff: {
+    empty: "No staff accounts yet",
+
     title: 'Staff', subtitle: 'Manage staff accounts', add: 'Add staff member',
     fullName: 'Full name', username: 'Username', password: 'Password',
     passwordHint: 'At least 8 characters, with a letter and a digit',
@@ -145,6 +227,11 @@ export default {
     },
   },
   tableAdmin: {
+    copied: "Link copied",
+    baseHint: "The address phones use to open the QR links. Use this computer's Wi-Fi IP, not localhost.",
+    localhostWarn: "“localhost” only works on this computer. Phones need the Wi-Fi IP address.",
+    empty: "No tables yet",
+
     subtitle: 'Create tables, print QR codes and assign waiters',
     add: 'Add table', edit: 'Edit table', number: 'Number', area: 'Area', seats: 'Seats',
     waiter: 'Waiter', noWaiter: 'Nobody', closed: 'Closed', close: 'Close', reopen: 'Reopen',
@@ -173,6 +260,22 @@ export default {
     },
   },
   stock: {
+    subtitle: "Ingredient levels, deliveries and every movement in one place.",
+    ingredients: "Ingredients",
+    lowCount: "Low stock",
+    lowHint: "Order these soon",
+    allGood: "All above minimum",
+    value: "Stock value",
+    search: "Search ingredients",
+    lowOnly: "Low stock only",
+    noMatch: "No ingredients match",
+    record: "Record stock",
+    recordHint: "Deliveries, waste or corrections.",
+    saved: "Stock updated",
+    noMoves: "No movements yet",
+    change: "Change",
+    when: "When",
+
     title: 'Stock', ingredient: 'Ingredient', qty: 'Stock', unit: 'Unit', min: 'Minimum', cost: 'Unit cost',
     low: 'Low stock', receive: 'Add stock / adjust', reason: 'Reason', delivery: 'Delivery', waste: 'Waste',
     adjustment: 'Adjustment', sale: 'Sale', amount: 'Quantity', unitCost: 'Unit cost', note: 'Note',
@@ -180,6 +283,9 @@ export default {
     err: { NEGATIVE_STOCK: 'Stock cannot go below zero', generic: 'Something went wrong' },
   },
   settings: {
+    subtitle: "Billing rules, simulated SMS messages and the audit log.",
+    serviceHint: "Added to every new bill.",
+
     title: 'Settings', serviceCharge: 'Service charge (%)', save: 'Save', saved: 'Saved',
     sms: 'SMS messages (simulated)', noSms: 'No SMS yet', audit: 'Audit log',
     who: 'User', action: 'Action', when: 'When',

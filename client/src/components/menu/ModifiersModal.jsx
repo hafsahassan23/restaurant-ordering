@@ -281,7 +281,7 @@ export default function ModifiersModal({ dish, ingredients, lang, onClose }) {
             <p className="text-slate-600">{t("menuAdmin.noGroups")}</p>
           )}
           {detail.groups.map((g) => (
-            <div key={g.id} className="rounded-xl border border-line p-4">
+            <div key={g.id} className="rounded-xl border border-line bg-slate-50/50 p-4">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="font-bold">
                   {pick(g, "name", lang)}{" "}

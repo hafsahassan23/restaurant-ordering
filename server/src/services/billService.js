@@ -67,7 +67,8 @@ exports.openBillForTable = async (tableId) => {
  */
 exports.createBill = async (tableId, user, ip) => {
   const { billId, created } = await db.transaction(async (trx) => {
-    const table = await tableRepository.findById(tableId, trx);
+    // Lock the table row: two quick "create bill" clicks run one after the other, so only one bill is made
+    const table = await tableRepository.lockById(tableId, trx);
     if (!table) throw new AppError(404, 'Table not found', 'TABLE_NOT_FOUND');
     assertCanBill(user, table);
 

@@ -1,6 +1,8 @@
-
-
-
+/**
+ * Express application: security middleware, routes and the global error handler.
+ * Order matters: CORS and rate limiting must run before any router, otherwise
+ * routers answer first and those middlewares never apply.
+ */
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -12,27 +14,11 @@ const origins = require('./origins');
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: 'http://localhost:5173' }));
-app.use(express.json());
-
-app.use('/api/public', require('./routes/publicRoutes'));   
-app.use('/api', require('./routes/orderRoutes'));           
-app.use('/api/stock', require('./routes/stockRoutes'));    
-
-app.use('/api/bills', require('./routes/billRoutes'));          
-app.use('/api/sms-outbox', require('./routes/smsRoutes'));   
-
-app.use('/api/reports', require('./routes/reportRoutes'));
-app.use('/api/menu-admin', require('./routes/menuAdminRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/admin/tables', require('./routes/tableAdminRoutes'));
-app.use('/api/menu-admin', require('./routes/catalogRoutes')); 
-
-// app.js
+// Allowed origins: this computer and the restaurant's local network (phones scanning a QR code)
 app.use(cors({ origin: origins }));
+app.use(express.json({ limit: '100kb' }));
 
-
-// General rate limit for the whole API (login has a stricter one of its own)
+// General rate limit for the whole API (login and public orders have stricter ones of their own)
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 600,
@@ -46,6 +32,16 @@ app.use('/api', apiLimiter);
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/audit-logs', require('./routes/auditRoutes'));
+app.use('/api/public', require('./routes/publicRoutes'));
+app.use('/api/stock', require('./routes/stockRoutes'));
+app.use('/api/bills', require('./routes/billRoutes'));
+app.use('/api/sms-outbox', require('./routes/smsRoutes'));
+app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api/menu-admin', require('./routes/menuAdminRoutes'));
+app.use('/api/menu-admin', require('./routes/catalogRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/admin/tables', require('./routes/tableAdminRoutes'));
+app.use('/api', require('./routes/orderRoutes')); // /tables, /orders, /kitchen, /items
 
 // 404
 app.use((req, res) => res.status(404).json({ error: 'Not found', code: 'NOT_FOUND' }));
