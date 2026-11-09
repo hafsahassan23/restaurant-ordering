@@ -3,7 +3,6 @@
 Real-time ordering for restaurants in Somali cities. Customers order from a QR code at the table, waiters confirm, the kitchen cooks, the cashier bills. Payments and SMS are simulated. Runs on the restaurant's local network.
 Built for the Somalia 10X Challenge, Project 14. Somali and English everywhere.
 
-## Stack
 ## Technology Stack
 
 ### Frontend
@@ -29,6 +28,17 @@ Built for the Somalia 10X Challenge, Project 14. Somali and English everywhere.
 - Vitest 5.1.0
 - Supertest 7.3.1
 - GitHub Actions
+
+## Automated Testing
+
+- Test framework: Vitest 5.1.0
+- API testing: Supertest 7.3.1
+- Test files: 6
+- Automated tests: 58
+- Latest GitHub Actions CI: Passed
+- CI runs automatically on every push and pull request.
+- Run locally: `cd server && npm test`
+
 
 ## Feature Status
 
