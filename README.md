@@ -4,7 +4,31 @@ Real-time ordering for restaurants in Somali cities. Customers order from a QR c
 Built for the Somalia 10X Challenge, Project 14. Somali and English everywhere.
 
 ## Stack
-React + Vite + Tailwind (client) · Node.js + Express (server) · MySQL/MariaDB with Knex (migrations, seeds) · Socket.IO (real-time) · JWT + bcrypt · Zod · Vitest + Supertest · GitHub Actions.
+## Technology Stack
+
+### Frontend
+- React 19.3.1
+- Vite 8.3.5
+- Tailwind CSS 4.3.4
+- React Router 7.18.5
+- Socket.IO Client 4.8.4
+- Recharts 3.10.1
+- i18next 26.7.1
+
+### Backend
+- Node.js
+- Express 5.3.0
+- Knex 3.3.0
+- MySQL2 3.24.6
+- Socket.IO 4.8.4
+- JWT 9.0.3
+- bcryptjs 3.0.3
+- Zod 4.6.7
+
+### Testing
+- Vitest 5.1.0
+- Supertest 7.3.1
+- GitHub Actions
 
 ## Feature Status
 
@@ -22,6 +46,7 @@ React + Vite + Tailwind (client) · Node.js + Express (server) · MySQL/MariaDB 
 | Sales reports and analytics | Done |
 | Dish photo upload | Done |
 | Move order to another table | Done |
+
 
 ## Run it
 1. Start MySQL (XAMPP) and create the database `restaurant_ordering_db` (utf8mb4_unicode_ci).
