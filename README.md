@@ -23,9 +23,9 @@ Built for the Somalia 10X Challenge, Project 14.
 | 11 | Bills with service charge, split equally or by item | Done | |
 | 12 | Simulated payment: cash with change, EVC Plus / Zaad / eDahab, receipt | Done | |
 | 13 | Reports: daily sales, by dish and category, prep time, food cost % (> 40 % highlighted) | Done | |
-| – | Dish photos | Partial | A photo URL can be set; there is no file upload |
+| – | Dish photos | Done | Upload a JPEG/PNG/WebP (resized in the browser, stored in `server/uploads/`) or paste a link |
 
-Baseline: layered architecture, JWT login with 4 roles and server-side checks, audit log, MySQL with migrations and Somali seed data, 62 automated tests in CI, bcrypt, Zod validation, rate limiting, `.env.example`, charts from real queries, SO/EN switch, phone layout: all done.
+Baseline: layered architecture, JWT login with 4 roles and server-side checks, audit log, MySQL with migrations and Somali seed data, 65 automated tests in CI, bcrypt, Zod validation, rate limiting, `.env.example`, charts from real queries, SO/EN switch, phone layout: all done.
 
 ## Tech stack
 
@@ -89,9 +89,9 @@ cd server
 npm test
 ```
 
-One command: it creates a **separate** test database (`DB_NAME_TEST`, default `restaurant_ordering_db_test`), migrates and seeds it, then runs 62 tests. The demo database is never touched. The same command runs in GitHub Actions on every push, together with the client lint and build.
+One command: it creates a **separate** test database (`DB_NAME_TEST`, default `restaurant_ordering_db_test`), migrates and seeds it, then runs 65 tests. The demo database is never touched. The same command runs in GitHub Actions on every push, together with the client lint and build.
 
-The tests cover the core challenge: an order reaches the kitchen socket within 1 second, selling 10 portions deducts the right amounts, modifier ingredients are deducted, a dish switches off when an ingredient runs out and returns after a delivery, two waiters competing for the last portion, all-or-nothing deduction. They also cover status rules, cancellation and waste, waiter table ownership, closed tables and fake tokens, bills, splits, cash change, partial and mobile-money payments, concurrent bill creation, QR regeneration, staff and menu management, and login and role checks.
+The tests cover the core challenge: an order reaches the kitchen socket within 1 second, selling 10 portions deducts the right amounts, modifier ingredients are deducted, a dish switches off when an ingredient runs out and returns after a delivery, two waiters competing for the last portion, all-or-nothing deduction. They also cover status rules, cancellation and waste, waiter table ownership, closed tables and fake tokens, bills, splits, cash change, partial and mobile-money payments, concurrent bill creation, QR regeneration, dish photo upload (type and size checks, manager only), staff and menu management, and login and role checks.
 
 ## Demo accounts
 
@@ -188,7 +188,6 @@ Taken from the running app with sample data. A pitch deck with these screens is 
 ![Login](docs/screenshots/login.png)
 
 ## Known limitations
-- Dish photos are set by URL; there is no image upload.
 - Low-stock alerts are shown on the Stock page (red rows), not pushed as notifications.
 - The waiter assignment is per table, not a timed shift schedule.
 - The service is HTTP on the local network (no HTTPS), which is fine for a LAN but not for the internet.

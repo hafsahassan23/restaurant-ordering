@@ -56,6 +56,7 @@ Roles: **M** manager · **C** cashier · **W** waiter · **K** kitchen · **Publ
 | POST / PUT / DELETE | `/menu-admin/dishes[/:id]` | `{ category_id, name_so, name_en, description_*?, price > 0, photo_url?, prep_minutes }` | `{ id }` (409 `DISH_NAME_TAKEN`) |
 | GET | `/menu-admin/dishes/:id/detail` | – | dish with groups, modifiers and modifier ingredients |
 | PATCH | `/menu-admin/dishes/:id` | `{ is_available?, force_unavailable? }` | flags (409 `NO_RECIPE`) |
+| POST | `/menu-admin/photos` | `{ dataUrl: "data:image/jpeg;base64,..." }` (JPEG/PNG/WebP, max 2 MB) | `201 { url: "/uploads/dishes/<file>" }`; the file is served at that path |
 | GET / PUT | `/menu-admin/dishes/:id/recipe` | `{ items: [{ ingredientId, qty }] }` | recipe rows |
 | POST / PUT / DELETE | `/menu-admin/dishes/:id/groups`, `/menu-admin/groups/:id` | `{ name_so, name_en, is_required, min_select, max_select }` | `{ id }` |
 | POST / PUT / DELETE | `/menu-admin/groups/:id/modifiers`, `/menu-admin/modifiers/:id` | `{ name_so, name_en, price_delta, ingredients: [{ ingredientId, qty }] }` | `{ id }` |
