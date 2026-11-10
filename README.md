@@ -196,7 +196,8 @@ Taken from the running app with sample data. A pitch deck with these screens is 
 ![Waiter floor map](docs/screenshots/waiter.png)
 
 **Cashier: bill, split and payment**
-![Cashier](docs/screenshots/cashier.png)
+The bill with service charge, an equal or per-item split, and the demo payment panel: EVC Plus, eDahab, ZAAD, WAAFI, QR code or card. The phone number is checked while typing (here a valid EVC Plus number); the server checks it again before any payment.
+![Cashier: bill, split and demo payment](docs/screenshots/cashier.png)
 
 **Reports**
 ![Reports](docs/screenshots/reports.png)
