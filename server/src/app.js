@@ -1,6 +1,8 @@
-
-
-
+/**
+ * Express application: security middleware, routes and the global error handler.
+ * Order matters: CORS and rate limiting must run before any router, otherwise
+ * routers answer first and those middlewares never apply.
+ */
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -8,31 +10,25 @@ const rateLimit = require('express-rate-limit');
 const { ZodError } = require('zod');
 const AppError = require('./utils/AppError');
 const origins = require('./origins');
+const { UPLOAD_ROOT } = require('./services/photoService');
 
 const app = express();
 
 app.use(helmet());
-app.use(cors({ origin: 'http://localhost:5173' }));
-app.use(express.json());
-
-app.use('/api/public', require('./routes/publicRoutes'));   
-app.use('/api', require('./routes/orderRoutes'));           
-app.use('/api/stock', require('./routes/stockRoutes'));    
-
-app.use('/api/bills', require('./routes/billRoutes'));          
-app.use('/api/sms-outbox', require('./routes/smsRoutes'));   
-
-app.use('/api/reports', require('./routes/reportRoutes'));
-app.use('/api/menu-admin', require('./routes/menuAdminRoutes'));
-app.use('/api/users', require('./routes/userRoutes'));
-app.use('/api/admin/tables', require('./routes/tableAdminRoutes'));
-app.use('/api/menu-admin', require('./routes/catalogRoutes')); 
-
-// app.js
+// Allowed origins: this computer and the restaurant's local network (phones scanning a QR code)
 app.use(cors({ origin: origins }));
 
+// Uploaded dish photos. The app runs on another port, so allow cross-origin <img> loading.
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
+  express.static(UPLOAD_ROOT, { maxAge: '7d', index: false, dotfiles: 'deny' }),
+);
 
-// General rate limit for the whole API (login has a stricter one of its own)
+// General rate limit for the whole API (login and public orders have stricter ones of their own)
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
   limit: 600,
@@ -43,9 +39,23 @@ const apiLimiter = rateLimit({
 });
 app.use('/api', apiLimiter);
 
+// Photo upload has its own, larger body limit, so it is mounted before the global JSON parser
+app.use('/api/menu-admin/photos', require('./routes/photoRoutes'));
+app.use(express.json({ limit: '100kb' }));
+
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/audit-logs', require('./routes/auditRoutes'));
+app.use('/api/public', require('./routes/publicRoutes'));
+app.use('/api/stock', require('./routes/stockRoutes'));
+app.use('/api/bills', require('./routes/billRoutes'));
+app.use('/api/sms-outbox', require('./routes/smsRoutes'));
+app.use('/api/reports', require('./routes/reportRoutes'));
+app.use('/api/menu-admin', require('./routes/menuAdminRoutes'));
+app.use('/api/menu-admin', require('./routes/catalogRoutes'));
+app.use('/api/users', require('./routes/userRoutes'));
+app.use('/api/admin/tables', require('./routes/tableAdminRoutes'));
+app.use('/api', require('./routes/orderRoutes')); // /tables, /orders, /kitchen, /items
 
 // 404
 app.use((req, res) => res.status(404).json({ error: 'Not found', code: 'NOT_FOUND' }));

@@ -58,6 +58,9 @@ exports.regenerateQr = async (id, user, ip) => {
   await mustFind(id);
   await tableRepository.update(id, { token: newToken() });
   await audit(user, 'TABLE_QR_REGENERATED', id, null, ip);
+  // Phones still connected with the old token stop receiving this table's live updates
+  realtime.emit(`table:${id}`, 'table:token-revoked', {});
+  realtime.disconnectRoom(`table:${id}`);
   return tableRepository.findById(id);
 };
 

@@ -233,4 +233,11 @@ describe('Bill permissions and settings', () => {
     expect(bill.service_charge).toBe(0.5);
     expect(bill.total).toBe(5.5);
   });
+
+  it('two "create bill" clicks at the same time make only one bill', async () => {
+    await servedOrder([{ dishId: await dishId('Fried eggs'), quantity: 1 }]);
+    const [a, b] = await Promise.all([createBill(cashierToken, table1.id), createBill(cashierToken, table1.id)]);
+    expect(a.body.id).toBe(b.body.id);
+    expect(Number((await db('bills').where({ table_id: table1.id }).count({ c: 'id' }).first()).c)).toBe(1);
+  });
 });

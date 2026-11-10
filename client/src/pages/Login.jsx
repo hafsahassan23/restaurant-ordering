@@ -1,12 +1,15 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Eye, EyeOff, Lock, User, Zap, ChefHat, BarChart3 } from "lucide-react";
 import { useAuth } from "../context/AuthContext.jsx";
 import { homeFor } from "../lib/roles.js";
 import LanguageSwitch from "../components/LanguageSwitch.jsx";
+import { Logo } from "../components/Layout.jsx";
+import { Alert, Button } from "../components/ui.jsx";
 
 const inputClass =
-  "h-12 w-full rounded-xl border border-line bg-white px-4 text-base outline-none focus:border-brand focus:ring-2 focus:ring-brand/30";
+  "h-12 w-full rounded-lg border border-line bg-white pl-10 pr-3 text-[15px] outline-none transition placeholder:text-slate-400 hover:border-slate-300 focus:border-brand focus:ring-4 focus:ring-brand/10";
 
 export default function Login() {
   const { t } = useTranslation();
@@ -51,81 +54,100 @@ export default function Login() {
     }
   }
 
+  const features = [
+    [Zap, "auth.feature1"],
+    [ChefHat, "auth.feature2"],
+    [BarChart3, "auth.feature3"],
+  ];
+
   return (
-    <div className="flex min-h-screen flex-col bg-surface">
-      <div className="flex justify-end p-4">
-        <LanguageSwitch />
-      </div>
-      <div className="flex flex-1 items-center justify-center px-4 pb-10">
-        <form
-          onSubmit={onSubmit}
-          noValidate
-          className="w-full max-w-md rounded-2xl border border-line bg-white p-6 shadow-sm sm:p-8"
-        >
-          <div className="mb-6 text-center">
-            <div className="mx-auto mb-3 grid h-14 w-14 place-items-center rounded-2xl bg-brand text-2xl text-white">
-              🍽️
-            </div>
-            <h1 className="text-2xl font-bold">{t("app.name")}</h1>
-            <p className="text-slate-600">{t("app.tagline")}</p>
+    <div className="grid min-h-screen bg-white lg:grid-cols-[1.1fr_1fr]">
+      {/* Brand panel (desktop) */}
+      <aside className="relative hidden overflow-hidden bg-brand-900 lg:block">
+        <img src="/images/cover.png" alt="" className="absolute inset-0 h-full w-full object-cover opacity-40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-brand-900 via-brand-900/70 to-brand-900/30" />
+        <div className="relative flex h-full flex-col justify-between p-10 xl:p-14">
+          <Logo light />
+          <div className="max-w-md text-white">
+            <h2 className="text-3xl font-bold leading-tight xl:text-4xl">{t("auth.panelTitle")}</h2>
+            <p className="mt-3 text-white/75">{t("auth.panelText")}</p>
+            <ul className="mt-8 space-y-3">
+              {features.map(([Icon, key]) => (
+                <li key={key} className="flex items-center gap-3 text-sm text-white/90">
+                  <span className="grid h-8 w-8 place-items-center rounded-lg bg-white/10">
+                    <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
+                  </span>
+                  {t(key)}
+                </li>
+              ))}
+            </ul>
           </div>
+        </div>
+      </aside>
 
-          {serverError && (
-            <div
-              role="alert"
-              className="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-red-800"
-            >
-              {serverError}
-            </div>
-          )}
-
-          <label htmlFor="username" className="mb-1 block font-medium">
-            {t("auth.username")}
-          </label>
-          <input
-            id="username"
-            className={inputClass}
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            autoComplete="username"
-            autoCapitalize="none"
-          />
-          {errors.username && (
-            <p className="mt-1 text-sm text-red-700">{errors.username}</p>
-          )}
-
-          <label htmlFor="password" className="mb-1 mt-4 block font-medium">
-            {t("auth.password")}
-          </label>
-          <div className="relative">
-            <input
-              id="password"
-              type={show ? "text" : "password"}
-              className={`${inputClass} pr-24`}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              autoComplete="current-password"
-            />
-            <button
-              type="button"
-              onClick={() => setShow((s) => !s)}
-              className="absolute right-1 top-1 h-10 rounded-lg px-3 text-sm font-medium text-brand"
-            >
-              {show ? t("auth.hide") : t("auth.show")}
-            </button>
+      {/* Form */}
+      <div className="flex flex-col">
+        <div className="flex items-center justify-between p-5 sm:p-6">
+          <div className="lg:invisible">
+            <Logo />
           </div>
-          {errors.password && (
-            <p className="mt-1 text-sm text-red-700">{errors.password}</p>
-          )}
+          <LanguageSwitch />
+        </div>
+        <div className="flex flex-1 items-center justify-center px-5 pb-16">
+          <form onSubmit={onSubmit} noValidate className="w-full max-w-sm">
+            <h1 className="text-2xl font-bold tracking-tight">{t("auth.welcome")}</h1>
+            <p className="mb-8 mt-1 text-muted">{t("auth.subtitle")}</p>
 
-          <button
-            type="submit"
-            disabled={busy}
-            className="mt-6 h-12 w-full rounded-xl bg-brand text-base font-semibold text-white hover:bg-brand-dark disabled:opacity-60"
-          >
-            {busy ? t("auth.loading") : t("auth.submit")}
-          </button>
-        </form>
+            {serverError && <Alert>{serverError}</Alert>}
+
+            <label htmlFor="username" className="mb-1.5 block text-sm font-medium text-slate-700">
+              {t("auth.username")}
+            </label>
+            <div className="relative">
+              <User className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" aria-hidden="true" />
+              <input
+                id="username"
+                className={inputClass}
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+                autoCapitalize="none"
+                aria-invalid={!!errors.username}
+              />
+            </div>
+            {errors.username && <p className="mt-1 text-xs font-medium text-red-600">{errors.username}</p>}
+
+            <label htmlFor="password" className="mb-1.5 mt-5 block text-sm font-medium text-slate-700">
+              {t("auth.password")}
+            </label>
+            <div className="relative">
+              <Lock className="pointer-events-none absolute left-3 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-slate-400" aria-hidden="true" />
+              <input
+                id="password"
+                type={show ? "text" : "password"}
+                className={`${inputClass} pr-12`}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                autoComplete="current-password"
+                aria-invalid={!!errors.password}
+              />
+              <button
+                type="button"
+                onClick={() => setShow((s) => !s)}
+                aria-label={show ? t("auth.hide") : t("auth.show")}
+                title={show ? t("auth.hide") : t("auth.show")}
+                className="absolute right-1.5 top-1.5 grid h-9 w-9 place-items-center rounded-md text-slate-500 hover:bg-slate-100"
+              >
+                {show ? <EyeOff className="h-[18px] w-[18px]" /> : <Eye className="h-[18px] w-[18px]" />}
+              </button>
+            </div>
+            {errors.password && <p className="mt-1 text-xs font-medium text-red-600">{errors.password}</p>}
+
+            <Button type="submit" size="lg" loading={busy} className="mt-8 w-full">
+              {busy ? t("auth.loading") : t("auth.submit")}
+            </Button>
+          </form>
+        </div>
       </div>
     </div>
   );

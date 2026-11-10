@@ -1,2 +1,4 @@
 node_modules
 .env
+# uploaded dish photos (runtime data)
+server/uploads/

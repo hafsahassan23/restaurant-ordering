@@ -1,6 +1,8 @@
 const db = require('../db');
 
 exports.findById = (id, trx = db) => trx('dining_tables').where({ id }).first();
+/** Read a table and lock its row until the transaction ends (serialises billing of one table). */
+exports.lockById = (id, trx) => trx('dining_tables').where({ id }).forUpdate().first();
 exports.findByToken = (token) => db('dining_tables').where({ token }).first();
 exports.list = () =>
   db('dining_tables')
