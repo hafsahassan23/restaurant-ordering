@@ -9,7 +9,7 @@ import CategoryModal from "../components/menu/CategoryModal.jsx";
 import DishModal from "../components/menu/DishModal.jsx";
 import RecipeModal from "../components/menu/RecipeModal.jsx";
 import ModifiersModal from "../components/menu/ModifiersModal.jsx";
-import { api } from "../lib/api";
+import { api, photoSrc } from "../lib/api";
 import { errorText } from "../lib/errors";
 import { money, pick } from "../lib/format";
 
@@ -161,7 +161,7 @@ export default function MenuAdmin() {
                     {cat.dishes.map((d) => (
                       <div key={d.id} className="flex flex-wrap items-center gap-4 p-4">
                         {d.photo_url ? (
-                          <img src={d.photo_url} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
+                          <img src={photoSrc(d.photo_url)} alt="" className="h-14 w-14 shrink-0 rounded-lg object-cover" />
                         ) : (
                           <div className="grid h-14 w-14 shrink-0 place-items-center rounded-lg bg-brand-50 text-brand" aria-hidden="true">
                             <UtensilsCrossed className="h-6 w-6" />

@@ -10,13 +10,23 @@ const rateLimit = require('express-rate-limit');
 const { ZodError } = require('zod');
 const AppError = require('./utils/AppError');
 const origins = require('./origins');
+const { UPLOAD_ROOT } = require('./services/photoService');
 
 const app = express();
 
 app.use(helmet());
 // Allowed origins: this computer and the restaurant's local network (phones scanning a QR code)
 app.use(cors({ origin: origins }));
-app.use(express.json({ limit: '100kb' }));
+
+// Uploaded dish photos. The app runs on another port, so allow cross-origin <img> loading.
+app.use(
+  '/uploads',
+  (req, res, next) => {
+    res.set('Cross-Origin-Resource-Policy', 'cross-origin');
+    next();
+  },
+  express.static(UPLOAD_ROOT, { maxAge: '7d', index: false, dotfiles: 'deny' }),
+);
 
 // General rate limit for the whole API (login and public orders have stricter ones of their own)
 const apiLimiter = rateLimit({
@@ -28,6 +38,10 @@ const apiLimiter = rateLimit({
   message: { error: 'Too many requests', code: 'RATE_LIMIT' },
 });
 app.use('/api', apiLimiter);
+
+// Photo upload has its own, larger body limit, so it is mounted before the global JSON parser
+app.use('/api/menu-admin/photos', require('./routes/photoRoutes'));
+app.use(express.json({ limit: '100kb' }));
 
 app.get('/api/health', (req, res) => res.json({ ok: true }));
 app.use('/api/auth', require('./routes/authRoutes'));

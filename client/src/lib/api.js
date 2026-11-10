@@ -22,7 +22,11 @@ export async function api(path, { method = 'GET', body } = {}) {
     const err = new Error(data.error || 'Request failed');
     err.status = res.status;
     err.code = data.code;
+    err.details = data.details || []; // validation errors: [{ field, message }]
     throw err;
   }
   return data;
 }
+
+/** Image address for a dish photo: uploaded photos live on the API server, links are used as they are. */
+export const photoSrc = (url) => (url && url.startsWith('/uploads/') ? `${API_URL}${url}` : url);

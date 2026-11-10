@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Check, Minus, Plus, X, Clock, UtensilsCrossed } from "lucide-react";
 import { money, pick } from "../lib/format";
+import { photoSrc } from "../lib/api";
 import { inputCls } from "./ui.jsx";
 
 /** Bottom sheet: choose modifiers, notes and quantity for one dish. Used by customers and waiters. */
@@ -42,7 +43,7 @@ export default function DishSheet({ dish, lang, onClose, onAdd }) {
       >
         {dish.photo_url ? (
           <div className="relative h-44 shrink-0 bg-slate-100">
-            <img src={dish.photo_url} alt="" className="h-full w-full object-cover" />
+            <img src={photoSrc(dish.photo_url)} alt="" className="h-full w-full object-cover" />
           </div>
         ) : null}
         <button
@@ -190,7 +191,7 @@ export default function DishSheet({ dish, lang, onClose, onAdd }) {
 /** Placeholder tile for dishes without a photo. */
 export function DishImage({ dish, lang, className = "" }) {
   return dish.photo_url ? (
-    <img src={dish.photo_url} alt={pick(dish, "name", lang)} className={`object-cover ${className}`} />
+    <img src={photoSrc(dish.photo_url)} alt={pick(dish, "name", lang)} className={`object-cover ${className}`} />
   ) : (
     <div className={`grid place-items-center bg-gradient-to-br from-brand-50 to-brand-100 text-brand ${className}`} aria-hidden="true">
       <UtensilsCrossed className="h-8 w-8 opacity-70" />

@@ -1,6 +1,8 @@
 export default {
   app: { name: 'Som Restaurant RTO', tagline: 'Maamulka Cuntada' },
   common: {
+    checkForm: "Fadlan hubi xogta la gelisay",
+
     close: "Xir",
     language: "Luqadda",
 
@@ -217,6 +219,17 @@ delayed: "Dib u dhac",
     pct: 'Kharash %', high: 'Qiimo sare', ok: 'Caadi', empty: 'Xog ma jirto muddadan', error: 'Warbixinta lama soo qaadi karo',
   },
   menuAdmin: {
+    photoTitle: "Sawirka cuntada",
+
+    uploadPhoto: "Soo geli sawir",
+    changePhoto: "Beddel sawirka",
+    removePhoto: "Ka saar",
+    photoUploadHint: "JPEG, PNG ama WebP. Sawirrada waaweyn si toos ah ayaa loo yareeyaa.",
+    photoLink: "Ama ku dheji xiriiriyaha sawirka",
+    photoPasted: "Sawir la dhejiyay: waa la soo gelinayaa marka aad keydiso",
+    photoInvalid: "Sawirkan lama isticmaali karo. Soo geli sawir JPEG, PNG ama WebP, ama ku dheji xiriiriye ka bilaabma https://",
+    photoTooBig: "Sawirku aad buu u weyn yahay (ugu badnaan 2 MB)",
+
     categories: "Qaybaha",
     allDishes: "Dhammaan cuntooyinka",
     availableNow: "hadda la heli karo",

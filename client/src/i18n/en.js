@@ -1,6 +1,8 @@
 export default {
   app: { name: 'Som Restaurant RTO', tagline: 'Real-Time Ordering Management' },
   common: {
+    checkForm: "Please check the values you entered",
+
     close: "Close",
     language: "Language",
 
@@ -176,6 +178,17 @@ delayed: "Delayed",
     pct: 'Cost %', high: 'High', ok: 'OK', empty: 'No data for this period', error: 'Could not load the report',
   },
   menuAdmin: {
+    photoTitle: "Dish photo",
+
+    uploadPhoto: "Upload photo",
+    changePhoto: "Change photo",
+    removePhoto: "Remove",
+    photoUploadHint: "JPEG, PNG or WebP. Big photos are made smaller automatically.",
+    photoLink: "Or paste a photo link",
+    photoPasted: "Pasted picture: it will be uploaded when you save",
+    photoInvalid: "This photo cannot be used. Upload a JPEG, PNG or WebP image, or paste a link starting with https://",
+    photoTooBig: "The photo is too big (max 2 MB)",
+
     categories: "Categories",
     allDishes: "All dishes",
     availableNow: "available now",
