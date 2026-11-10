@@ -236,7 +236,7 @@ describe('Moving orders and bill history', () => {
   it('the cashier can list paid bills to show a receipt again; a waiter cannot', async () => {
     await servedOrder({ table: table1, waiterToken: waiter1Token, kitchenToken, items: [{ dishId: await dishId('Fried eggs'), quantity: 1 }] });
     const bill = (await call('post', cashierToken, `/api/bills/table/${table1.id}`)).body;
-    await call('post', cashierToken, `/api/bills/${bill.id}/payments`, { method: 'cash', amountGiven: 5 });
+    await call('post', cashierToken, `/api/bills/${bill.id}/payments`, { method: 'evc_plus', phone: '619011723', idempotencyKey: `history-${Date.now()}` });
 
     const list = await call('get', cashierToken, '/api/bills?status=paid');
     expect(list.status).toBe(200);

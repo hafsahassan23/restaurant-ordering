@@ -47,18 +47,50 @@ router.post('/:id/splits', authenticate, authorize(...STAFF), async (req, res) =
   res.status(201).json(await billService.createSplits(idParam(req.params.id), body, req.user, req.ip));
 });
 
+// Shape only; the payment rules (phone per provider, Luhn, expiry, CVV, no cash) are checked in the service
 const paySchema = z.object({
-  method: z.enum(['cash', 'evc_plus', 'zaad', 'edahab']),
+  method: z.string().max(20),
   splitId: z.number().int().positive().optional(),
   amount: z.number().positive().optional(),
-  amountGiven: z.number().positive().optional(),
-  phone: z.string().regex(/^\+?\d{7,15}$/).optional(),
+  phone: z.string().max(25).optional(),
+  card: z.object({
+    number: z.string().max(25),
+    expiry: z.string().max(7),
+    cvv: z.string().max(4),
+    name: z.string().max(60),
+  }).optional(),
+  idempotencyKey: z.string().min(8).max(64).regex(/^[A-Za-z0-9_-]+$/),
 });
 
-/** POST /api/bills/:id/payments (cashier or manager) */
+/**
+ * POST /api/bills/:id/payments (cashier or manager): demo payment by phone or card.
+ * Body: { method: evc_plus|edahab|zaad|waafi|card, phone? | card?, splitId?, amount?, idempotencyKey }
+ * 201 { payment: { reference, status: "SUCCESS", payer_masked }, closed, bill }
+ * 400 invalid details (PHONE_FORMAT, PHONE_PROVIDER, PHONE_FAKE, CARD_*, CASH_NOT_ALLOWED) - nothing is recorded
+ * 402 PAYMENT_DECLINED (recorded as FAILED, never counts) · 409 PAYMENT_PENDING while a QR payment is open
+ */
 router.post('/:id/payments', authenticate, authorize('cashier', 'manager'), async (req, res) => {
   const body = paySchema.parse(req.body);
   res.status(201).json(await billService.pay(idParam(req.params.id), body, req.user, req.ip));
+});
+
+const qrSchema = z.object({
+  splitId: z.number().int().positive().optional(),
+  amount: z.number().positive().optional(),
+  idempotencyKey: z.string().min(8).max(64).regex(/^[A-Za-z0-9_-]+$/),
+});
+
+/** POST /api/bills/:id/qr { splitId?, amount?, idempotencyKey } -> 201 bill with pending_payment { reference, amount, payload } */
+router.post('/:id/qr', authenticate, authorize('cashier', 'manager'), async (req, res) => {
+  const body = qrSchema.parse(req.body);
+  res.status(201).json(await billService.startQr(idParam(req.params.id), body, req.user, req.ip));
+});
+
+/** POST /api/bills/qr/:reference/result { outcome: "success" | "failed" } -> simulate the customer's QR payment */
+router.post('/qr/:reference/result', authenticate, authorize('cashier', 'manager'), async (req, res) => {
+  const reference = z.string().regex(/^QR-\d{8}-[A-F0-9]{8}$/).parse(req.params.reference);
+  const { outcome } = z.object({ outcome: z.enum(['success', 'failed']) }).parse(req.body);
+  res.json(await billService.finishQr(reference, outcome, req.user, req.ip));
 });
 /** GET /api/bills?status=paid&limit=50 -> recent bills (cashier, manager) */
 router.get('/', authenticate, authorize('cashier', 'manager'), async (req, res) => {

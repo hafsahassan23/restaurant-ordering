@@ -2,7 +2,7 @@
 
 **The problem.** Busy restaurants in Somali cities take orders on paper. Orders get mixed up between tables, the kitchen does not know what to cook first, and owners do not know their real food cost per dish.
 
-**The solution.** Customers order from a QR code at the table, the waiter confirms, the kitchen sees the order within a second, and the cashier bills and takes (simulated) cash or mobile money. Each dish has a recipe, so selling it deducts its ingredients from stock, and a dish switches off on every screen when an ingredient runs out. Runs on the restaurant's local network. Somali and English everywhere.
+**The solution.** Customers order from a QR code at the table, the waiter confirms, the kitchen sees the order within a second, and the cashier bills and takes a (simulated) payment by EVC Plus, eDahab, ZAAD, WAAFI, QR code or card. Each dish has a recipe, so selling it deducts its ingredients from stock, and a dish switches off on every screen when an ingredient runs out. Runs on the restaurant's local network. Somali and English everywhere.
 
 Built for the Somalia 10X Challenge, Project 14.
 
@@ -21,11 +21,11 @@ Built for the Somalia 10X Challenge, Project 14.
 | 9 | Stock deduction, deliveries with cost, low-stock flag, movement log | Done | |
 | 10 | Auto-unavailable (dishes and modifiers), manager override | Done | |
 | 11 | Bills with service charge, split equally or by item | Done | |
-| 12 | Simulated payment: cash with change, EVC Plus / Zaad / eDahab, receipt | Done | |
+| 12 | Simulated payment: EVC Plus, eDahab, ZAAD, WAAFI, QR code, card; receipt | Done | Strict validation; no cash (see Assumptions) |
 | 13 | Reports: daily sales, by dish and category, prep time, food cost % (> 40 % highlighted) | Done | |
 | – | Dish photos | Done | Upload a JPEG/PNG/WebP (resized in the browser, stored in `server/uploads/`) or paste a link |
 
-Baseline: layered architecture, JWT login with 4 roles and server-side checks, audit log, MySQL with migrations and Somali seed data, 65 automated tests in CI, bcrypt, Zod validation, rate limiting, `.env.example`, charts from real queries, SO/EN switch, phone layout: all done.
+Baseline: layered architecture, JWT login with 4 roles and server-side checks, audit log, MySQL with migrations and Somali seed data, 76 automated tests in CI, bcrypt, Zod validation, rate limiting, `.env.example`, charts from real queries, SO/EN switch, phone layout: all done.
 
 ## Tech stack
 
@@ -44,12 +44,12 @@ React screens ──HTTP──> Routes (auth + role check + Zod validation)
                            └─> Services (business rules, transactions)
                                  └─> Repositories (SQL only, Knex) ──> MySQL
                                  └─> realtime.js ──> Socket.IO rooms: kitchen · waiters · table:<id>
-                                 └─> adapters/ (paymentGateway, smsGateway) — simulated, swappable
+                                 └─> adapters/ (payments/, smsGateway) — simulated, swappable
 ```
 
 - **Screens never touch the database.** Routes only parse input and call a service; services hold the rules; repositories hold the SQL.
 - **Permissions are checked on the server** for every request (`authenticate` + `authorize(...roles)`), and again inside services for table ownership (a waiter can only edit their own tables).
-- **Adapters**: `server/src/adapters/paymentGateway.js` (mock EVC Plus / Zaad / eDahab; a phone ending in `0000` is declined) and `smsGateway.js` (writes to the `sms_outbox` table).
+- **Adapters**: `server/src/adapters/payments/` (the demo payment provider behind one interface, chosen by `PAYMENT_MODE`; real providers would be added next to it) and `smsGateway.js` (writes to the `sms_outbox` table).
 
 Full endpoint reference (method, path, request, response, roles) and the real-time events: [docs/API.md](docs/API.md).
 
@@ -89,9 +89,9 @@ cd server
 npm test
 ```
 
-One command: it creates a **separate** test database (`DB_NAME_TEST`, default `restaurant_ordering_db_test`), migrates and seeds it, then runs 65 tests. The demo database is never touched. The same command runs in GitHub Actions on every push, together with the client lint and build.
+One command: it creates a **separate** test database (`DB_NAME_TEST`, default `restaurant_ordering_db_test`), migrates and seeds it, then runs 76 tests. The demo database is never touched. The same command runs in GitHub Actions on every push, together with the client lint and build.
 
-The tests cover the core challenge: an order reaches the kitchen socket within 1 second, selling 10 portions deducts the right amounts, modifier ingredients are deducted, a dish switches off when an ingredient runs out and returns after a delivery, two waiters competing for the last portion, all-or-nothing deduction. They also cover status rules, cancellation and waste, waiter table ownership, closed tables and fake tokens, bills, splits, cash change, partial and mobile-money payments, concurrent bill creation, QR regeneration, dish photo upload (type and size checks, manager only), staff and menu management, and login and role checks.
+The tests cover the core challenge: an order reaches the kitchen socket within 1 second, selling 10 portions deducts the right amounts, modifier ingredients are deducted, a dish switches off when an ingredient runs out and returns after a delivery, two waiters competing for the last portion, all-or-nothing deduction. They also cover status rules, cancellation and waste, waiter table ownership, closed tables and fake tokens, bills, splits, partial payments, demo payments (Somali phone rules per provider, Luhn/expiry/CVV card checks, QR pending → success/failed, duplicate submissions, no card data stored), concurrent bill creation, QR regeneration, dish photo upload (type and size checks, manager only), staff and menu management, and login and role checks.
 
 ## Demo accounts
 
@@ -109,7 +109,7 @@ Customers need no login: they scan the QR of their table.
 1. Phone: scan table 1's QR, choose *Bariis iyo hilib* with a meat choice, send.
 2. Waiter (waiter1): the order appears instantly, confirm it. Kitchen: the card appears with a sound.
 3. Kitchen: Cooking → Ready. Waiter gets the Ready alert → Served.
-4. Cashier: create the bill, split it, pay one part in cash (change shown) and one with EVC Plus (SMS in the outbox), show the receipt. The table becomes Free.
+4. Cashier: create the bill, split it, show that `12345678` is refused, pay one part with EVC Plus `619011723` (SMS in the outbox) and one with the QR code (simulate "Customer paid"), show the receipt. The table becomes Free.
 5. Manager › Stock: lower an ingredient, order until it runs out, and the dish greys out on every screen. Record a delivery and it comes back.
 6. Manager › Reports: daily sales and food cost %.
 
@@ -155,11 +155,31 @@ Other tables: `sms_outbox` (simulated SMS), `settings` (service charge, restaura
 - Each table has one assigned waiter, set by the manager (the "shift" is the current assignment). Other waiters can view but not edit it. A table without a waiter can only be handled by the manager.
 - A bill can be created only when no order is pending and every item is served. While a table has an open bill it refuses new orders.
 - Splits always add up to the total (rounding cents go to the last person). Partial payment is allowed on a bill without splits. The table becomes Free only when the bill and every split are paid.
+- **No cash payments.** The restaurant asked for cashless payments only (EVC Plus, eDahab, ZAAD, WAAFI, QR code, card). This replaces the brief's "cash with change" option on purpose.
+- Network prefixes per provider are a demo assumption kept in one table (`server/src/utils/paymentValidation.js`): EVC Plus 61/77, eDahab 62/65, ZAAD 63, WAAFI 61/77/63/62/65.
 - Food cost % uses the dish recipe (without modifiers) and the current ingredient costs. A delivery with a unit cost updates the cost.
 - "Daily sales" counts paid bills by the day they were paid, including the service charge.
 
 ## Security
 bcrypt password hashes · JWT (8 h) with server-side role checks on every request · Zod validation of every input · rate limiting (whole API 600/min per IP, login 30 per 15 min, public orders 20/min) · CORS limited to localhost and the local network · helmet headers · parameterised SQL (Knex) · audit log of sensitive actions (login, failed login, order confirm/reject/move, cancellations, stock, recipes, menu, tables and QR, staff, payments, settings) · secrets only in `.env` (not in Git; see `server/.env.example`).
+
+## Payments (demo mode)
+
+All payments are **simulated**: no money moves and no real provider is called. The screen and the receipt say "DEMO".
+
+| Method | Rule (checked in the browser **and** again on the server) | Demo behaviour |
+|---|---|---|
+| EVC Plus | 9-digit Somali number starting **61** or **77** (e.g. `619011723`, `771843297`) | number ending in `0000` is declined |
+| eDahab | starts **62** or **65** (e.g. `629011723`) | same |
+| ZAAD | starts **63** | same |
+| WAAFI | starts **61, 77, 63, 62** or **65** | same |
+| QR code | a code with a unique reference, the bill, its order IDs and the amount | stays **PENDING** until "Customer paid" or "Payment failed" is chosen |
+| Card | name required, number passes the **Luhn** check, expiry not in the past, CVV 3–4 digits | `4242 4242 4242 4242` approved, `4000 0000 0000 0002` declined |
+
+- Numbers may be typed as `619011723`, `0619011723`, `+252 61 901 1723` or `00252…`. Short, fake (`611111111`, `611234567`) or wrong-network numbers (an eDahab number for EVC Plus) are refused, and the screen offers the right provider.
+- Invalid details are refused with a clear message and **no payment record is created**. A declined demo charge is stored as `FAILED`; only `SUCCESS` payments count, and only they can make the bill `PAID`.
+- Every attempt gets a unique reference (e.g. `EVC-20261110-7F3A9C21`). Each click sends an idempotency key, so a double click or a retry never pays twice. While a QR payment is pending, nothing else can be paid on that bill.
+- Card numbers and CVV are never stored or logged: only `VISA •••• 4242`. Phone numbers are stored masked (`61****723`); the full number only goes to the simulated SMS outbox.
 
 ## Screenshots
 

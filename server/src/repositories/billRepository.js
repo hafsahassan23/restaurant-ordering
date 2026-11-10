@@ -57,10 +57,19 @@ exports.paymentsOf = (billId, trx = db) =>
     .select('payments.*', 'users.full_name as cashier_name')
     .orderBy('payments.id');
 exports.insertPayment = (row, trx) => trx('payments').insert(row).then(([id]) => id);
+exports.updatePayment = (id, patch, trx) => trx('payments').where({ id }).update(patch);
+/** Only successful payments count towards the bill. */
 exports.paidTotal = async (billId, trx = db) => {
-  const r = await trx('payments').where({ bill_id: billId }).sum({ s: 'amount' }).first();
+  const r = await trx('payments').where({ bill_id: billId, status: 'SUCCESS' }).sum({ s: 'amount' }).first();
   return Number(r.s || 0);
 };
+/** The payment started earlier with the same idempotency key (duplicate submission). */
+exports.paymentByKey = (key, trx = db) => trx('payments').where({ idempotency_key: key }).first();
+/** A QR payment still waiting for the customer blocks other payments on the bill. */
+exports.pendingOf = (billId, trx = db) => trx('payments').where({ bill_id: billId, status: 'PENDING' }).first();
+exports.lockPaymentByReference = (reference, trx) => trx('payments').where({ reference }).forUpdate().first();
+exports.orderIdsOfBill = async (billId, trx = db) =>
+  (await trx('orders').where({ bill_id: billId }).select('id').orderBy('id')).map((o) => o.id);
 exports.list = ({ status, limit }) => {
   const query = db('bills')
     .join('dining_tables', 'bills.table_id', 'dining_tables.id')

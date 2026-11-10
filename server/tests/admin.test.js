@@ -27,7 +27,7 @@ describe('Reports', () => {
   it('sales come from paid bills: total, by dish and by category', async () => {
     await servedOrder({ table: table1, waiterToken: waiter1Token, kitchenToken, items: [{ dishId: await dishId('Fried eggs'), quantity: 2 }] });
     const bill = (await request(app).post(`/api/bills/table/${table1.id}`).set(auth(cashierToken))).body;
-    await request(app).post(`/api/bills/${bill.id}/payments`).set(auth(cashierToken)).send({ method: 'cash', amountGiven: 10 });
+    await request(app).post(`/api/bills/${bill.id}/payments`).set(auth(cashierToken)).send({ method: 'evc_plus', phone: '619011723', idempotencyKey: `report-${Date.now()}` });
 
     const res = await summary(managerToken);
     expect(res.status).toBe(200);

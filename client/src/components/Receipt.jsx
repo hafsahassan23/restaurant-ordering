@@ -157,6 +157,9 @@ export default function Receipt({ bill, onClose }) {
                   </div>
                 )}
 
+                {payment.payer_masked && payment.payer_masked !== "QR" && (
+                  <p className="mt-1 text-[10px] text-slate-500">{payment.payer_masked}</p>
+                )}
                 {payment.reference && (
                   <p className="mt-1 break-all text-[10px] text-slate-500">
                     {bi("cashier.reference")}: {payment.reference}
@@ -172,6 +175,9 @@ export default function Receipt({ bill, onClose }) {
             <p className="mt-2 text-[10px] text-slate-500">
               {bi("cashier.keepReceipt")}
             </p>
+            {(bill.payments || []).some((p) => p.method !== "cash") && (
+              <p className="mt-2 text-[10px] font-bold uppercase tracking-wider text-slate-600">{bi("pay.receiptDemo")}</p>
+            )}
           </footer>
         </div>
 

@@ -41,9 +41,11 @@ Roles: **M** manager · **C** cashier · **W** waiter · **K** kitchen · **Publ
 | PUT | `/bills/service-charge` | M | `{ pct }` (0–30) | `{ pct }` |
 | GET | `/bills/table/:tableId` | W C M | – | open bill of the table, or `null` |
 | POST | `/bills/table/:tableId` | W C M | – | `201` new bill or `200` the open one |
-| GET | `/bills/:id` | W C M | – | bill: `lines, subtotal, service_charge, total, splits, payments, paid, remaining` |
+| GET | `/bills/:id` | W C M | – | bill: `lines, subtotal, service_charge, total, splits, payments` (SUCCESS only)`, pending_payment, failed_payments, paid, remaining` |
 | POST | `/bills/:id/splits` | W C M | `{ mode: "equal", people }` or `{ mode: "items", groups: [[itemId, ...], ...] }` | `201` bill with `splits` |
-| POST | `/bills/:id/payments` | C M | `{ method: "cash" \| "evc_plus" \| "zaad" \| "edahab", splitId?, amount?, amountGiven? (cash), phone? (mobile) }` | `201 { payment: { amount, change, reference }, closed, bill }` |
+| POST | `/bills/:id/payments` | C M | `{ method: "evc_plus" \| "edahab" \| "zaad" \| "waafi" \| "card", phone? \| card?: { number, expiry, cvv, name }, splitId?, amount?, idempotencyKey }` | `201 { payment: { reference, status: "SUCCESS", payer_masked }, closed, duplicate, bill }`; `400` invalid details (nothing stored: `PHONE_FORMAT`, `PHONE_PROVIDER` + `suggestion`, `PHONE_FAKE`, `CARD_*`, `CASH_NOT_ALLOWED`); `402 PAYMENT_DECLINED` + `reference` (stored as FAILED); `409 PAYMENT_PENDING` |
+| POST | `/bills/:id/qr` | C M | `{ splitId?, amount?, idempotencyKey }` | `201` bill with `pending_payment: { reference, amount, payload, status: "PENDING" }` |
+| POST | `/bills/qr/:reference/result` | C M | `{ outcome: "success" \| "failed" }` | `{ status: "SUCCESS" \| "FAILED", closed, bill }`; `409 PAYMENT_DONE` if already finished |
 | GET | `/bills?status=&limit=` | C M | – | recent bills |
 
 ## Stock, menu and recipes (manager)

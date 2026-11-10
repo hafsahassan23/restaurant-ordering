@@ -224,9 +224,20 @@ exports.cancelItem = async (itemId, reason, user, ip) => {
 };
 
 const views = (ids) => Promise.all(ids.map((id) => orderRepository.loadOrderView(id)));
-exports.pendingOrders = async () => views(await orderRepository.pendingIds());
+/**
+ * A waiter only sees orders of the tables assigned to them; manager and kitchen see all.
+ * Input: order views, the user. Output: the views this user may see.
+ */
+async function onlyMine(list, user) {
+  if (!user || user.role !== 'waiter') return list;
+  const mine = new Set((await tableRepository.list()).filter((t) => t.assigned_waiter_id === user.id).map((t) => t.id));
+  return list.filter((o) => mine.has(o.table_id));
+}
+
+/** Customer orders waiting for a waiter (a waiter gets only their own tables). */
+exports.pendingOrders = async (user) => onlyMine(await views(await orderRepository.pendingIds()), user);
 /** Used by the kitchen screen, and to reload everything after a reconnect. */
-exports.kitchenOrders = async () => views(await orderRepository.kitchenIds());
+exports.kitchenOrders = async (user) => onlyMine(await views(await orderRepository.kitchenIds()), user);
 exports.ordersForTable = async (tableId) => views(await orderRepository.tableOrderIds(tableId));
 /**
  * Move a whole order to another table (customers changed seats).

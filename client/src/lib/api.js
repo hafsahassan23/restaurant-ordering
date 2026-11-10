@@ -23,6 +23,9 @@ export async function api(path, { method = 'GET', body } = {}) {
     err.status = res.status;
     err.code = data.code;
     err.details = data.details || []; // validation errors: [{ field, message }]
+    err.reference = data.reference; // failed payment reference
+    err.field = data.field;
+    err.suggestion = data.suggestion;
     throw err;
   }
   return data;

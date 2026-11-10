@@ -222,3 +222,23 @@ describe('Roles, tables and item status', () => {
     expect(res.status).toBe(403);
   });
 });
+describe('Waiter sees only their own tables', () => {
+  it('pending and kitchen lists of a waiter contain only tables assigned to them', async () => {
+    const dish = await dishId('Fried eggs');
+    const order = await customerOrder(table1, [{ dishId: dish, quantity: 1 }]); // table 1 = waiter1
+    const ids = (res) => res.body.map((o) => o.id);
+
+    const w1 = await request(app).get('/api/orders/pending').set(auth(waiter1Token));
+    const w2 = await request(app).get('/api/orders/pending').set(auth(waiter2Token));
+    const mgr = await request(app).get('/api/orders/pending').set(auth(managerToken));
+    expect(ids(w1)).toContain(order.body.id);
+    expect(ids(w2)).not.toContain(order.body.id);
+    expect(ids(mgr)).toContain(order.body.id);
+
+    await confirm(waiter1Token, order.body.id);
+    const k2 = await request(app).get('/api/kitchen/orders').set(auth(waiter2Token));
+    const k = await request(app).get('/api/kitchen/orders').set(auth(kitchenToken));
+    expect(ids(k2)).not.toContain(order.body.id);
+    expect(ids(k)).toContain(order.body.id);
+  });
+});

@@ -228,13 +228,13 @@ export default function Waiter() {
 
       {/* PENDING ORDERS */}
       {tab === "pending" &&
-        (pending.length === 0 ? (
+        (myPending.length === 0 ? (
           <Card>
             <EmptyState icon={Check} title={t("waiter.noPending")} text={t("waiter.reviewOrders")} />
           </Card>
         ) : (
           <div className="grid gap-4 lg:grid-cols-2">
-            {pending.map((order) => {
+            {myPending.map((order) => {
               const mine = isMine(order.table_id);
               return (
                 <Card key={order.id} className="flex flex-col p-0">
@@ -291,13 +291,13 @@ export default function Waiter() {
 
       {/* READY ITEMS */}
       {tab === "ready" &&
-        (ready.length === 0 ? (
+        (myReady.length === 0 ? (
           <Card>
             <EmptyState icon={UtensilsCrossed} title={t("waiter.noReady")} text={t("waiter.readyItemsAppear")} />
           </Card>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {ready.map((item) => {
+            {myReady.map((item) => {
               const mine = isMine(item.table_id);
               return (
                 <Card key={item.id} className="flex items-center gap-4 border-green-200 p-4">

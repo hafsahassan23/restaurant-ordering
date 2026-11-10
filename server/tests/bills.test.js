@@ -13,6 +13,10 @@ const pay = (token, billId, body) =>
   request(app).post(`/api/bills/${billId}/payments`).set(auth(token)).send(body);
 const tableStatus = async (id) => (await db('dining_tables').where({ id }).first()).status;
 const cents = (n) => Math.round(n * 100) / 100;
+let seq = 0;
+/** Unique idempotency key per payment attempt (the cashier screen makes one per click). */
+const key = () => `test-${Date.now()}-${seq++}`;
+const evc = (extra = {}) => ({ method: 'evc_plus', phone: '619011723', idempotencyKey: key(), ...extra });
 
 /** Order, confirm and move every item to "served". */
 async function servedOrder(items) {
@@ -134,12 +138,13 @@ describe('Bills', () => {
 });
 
 describe('Payments', () => {
-  it('cash payment returns the change, closes the bill and frees the table', async () => {
+  it('a valid EVC Plus payment closes the bill and frees the table', async () => {
     await servedOrder([{ dishId: await dishId('Fried eggs'), quantity: 2 }]);
     const bill = (await createBill(cashierToken, table1.id)).body; // 5.25
-    const res = await pay(cashierToken, bill.id, { method: 'cash', amountGiven: 10 });
+    const res = await pay(cashierToken, bill.id, evc());
     expect(res.status).toBe(201);
-    expect(res.body.payment.change).toBe(4.75);
+    expect(res.body.payment.status).toBe('SUCCESS');
+    expect(res.body.payment.payer_masked).toBe('61****723');
     expect(res.body.closed).toBe(true);
     expect(await tableStatus(table1.id)).toBe('free');
     expect((await db('bills').where({ id: bill.id }).first()).status).toBe('paid');
@@ -150,12 +155,12 @@ describe('Payments', () => {
   it('partial payment leaves the remaining amount open on the table', async () => {
     await servedOrder([{ dishId: await dishId('Fried eggs'), quantity: 2 }]);
     const bill = (await createBill(cashierToken, table1.id)).body; // 5.25
-    const part = await pay(cashierToken, bill.id, { method: 'cash', amount: 2, amountGiven: 2 });
+    const part = await pay(cashierToken, bill.id, evc({ amount: 2 }));
     expect(part.body.closed).toBe(false);
     expect(part.body.bill.remaining).toBe(3.25);
     expect(await tableStatus(table1.id)).toBe('paying');
 
-    const rest = await pay(cashierToken, bill.id, { method: 'cash', amountGiven: 3.25 });
+    const rest = await pay(cashierToken, bill.id, { method: 'edahab', phone: '629011723', idempotencyKey: key() });
     expect(rest.body.closed).toBe(true);
     expect(await tableStatus(table1.id)).toBe('free');
   });
@@ -167,45 +172,50 @@ describe('Payments', () => {
       .send({ mode: 'equal', people: 2 });
     const [s1, s2] = split.body.splits;
 
-    const noSplit = await pay(cashierToken, bill.id, { method: 'cash', amountGiven: 10 });
+    const noSplit = await pay(cashierToken, bill.id, evc());
     expect(noSplit.status).toBe(400);
     expect(noSplit.body.code).toBe('SPLIT_REQUIRED');
 
-    const first = await pay(cashierToken, bill.id, { method: 'cash', splitId: s1.id, amountGiven: 5 });
+    const first = await pay(cashierToken, bill.id, evc({ splitId: s1.id }));
     expect(first.body.closed).toBe(false);
     expect(await tableStatus(table1.id)).toBe('paying');
-    const again = await pay(cashierToken, bill.id, { method: 'cash', splitId: s1.id, amountGiven: 5 });
+    const again = await pay(cashierToken, bill.id, evc({ splitId: s1.id }));
     expect(again.body.code).toBe('SPLIT_PAID');
 
-    const second = await pay(cashierToken, bill.id, { method: 'cash', splitId: s2.id, amountGiven: 5 });
+    const second = await pay(cashierToken, bill.id, evc({ splitId: s2.id }));
     expect(second.body.closed).toBe(true);
     expect(await tableStatus(table1.id)).toBe('free');
   });
 
-  it('mobile money: a declined number is refused, a good one pays and writes an SMS', async () => {
+  it('a declined demo charge is recorded as FAILED and never counts; a good number pays and writes an SMS', async () => {
     await servedOrder([{ dishId: await dishId('Fried eggs'), quantity: 1 }]);
     const bill = (await createBill(cashierToken, table1.id)).body;
 
-    const declined = await pay(cashierToken, bill.id, { method: 'evc_plus', phone: '252615550000' });
+    const declined = await pay(cashierToken, bill.id, evc({ phone: '619010000' })); // demo: ends in 0000
     expect(declined.status).toBe(402);
     expect(declined.body.code).toBe('PAYMENT_DECLINED');
-    expect(await db('payments')).toHaveLength(0);
+    expect(declined.body.reference).toMatch(/^EVC-\d{8}-[A-F0-9]{8}$/);
+    const failed = await db('payments');
+    expect(failed).toHaveLength(1);
+    expect(failed[0].status).toBe('FAILED');
+    expect((await db('bills').where({ id: bill.id }).first()).status).toBe('open');
 
-    const ok = await pay(cashierToken, bill.id, { method: 'evc_plus', phone: '252615550101' });
+    const ok = await pay(cashierToken, bill.id, evc({ phone: '+252 77 184 3297' }));
     expect(ok.status).toBe(201);
-    expect(ok.body.payment.reference).toMatch(/^EVC_PLUS-/);
+    expect(ok.body.payment.reference).toMatch(/^EVC-\d{8}-[A-F0-9]{8}$/);
     expect(ok.body.closed).toBe(true);
+    expect(ok.body.bill.payments).toHaveLength(1); // the failed attempt is not on the receipt
     const sms = await db('sms_outbox');
     expect(sms).toHaveLength(1);
-    expect(sms[0].to_phone).toBe('252615550101');
+    expect(sms[0].to_phone).toBe('252771843297');
   });
 
-  it('cash must cover the amount', async () => {
+  it('cash is not accepted', async () => {
     await servedOrder([{ dishId: await dishId('Fried eggs'), quantity: 2 }]);
     const bill = (await createBill(cashierToken, table1.id)).body;
-    const res = await pay(cashierToken, bill.id, { method: 'cash', amountGiven: 1 });
+    const res = await pay(cashierToken, bill.id, { method: 'cash', idempotencyKey: key() });
     expect(res.status).toBe(400);
-    expect(res.body.code).toBe('NOT_ENOUGH_CASH');
+    expect(res.body.code).toBe('CASH_NOT_ALLOWED');
     expect(await db('payments')).toHaveLength(0);
   });
 });
@@ -218,7 +228,7 @@ describe('Bill permissions and settings', () => {
     expect(other.body.code).toBe('NOT_YOUR_TABLE');
 
     const bill = (await createBill(waiter1Token, table1.id)).body;
-    const res = await pay(waiter1Token, bill.id, { method: 'cash', amountGiven: 10 });
+    const res = await pay(waiter1Token, bill.id, evc());
     expect(res.status).toBe(403);
   });
 

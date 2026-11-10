@@ -11,9 +11,9 @@ router.get('/tables', authenticate, authorize('waiter', 'cashier', 'manager'), a
   res.json(await tableService.list());
 });
 
-/** GET /api/orders/pending -> customer orders waiting for a waiter */
+/** GET /api/orders/pending -> customer orders waiting for a waiter (a waiter gets only their own tables) */
 router.get('/orders/pending', authenticate, authorize('waiter', 'manager'), async (req, res) => {
-  res.json(await orderService.pendingOrders());
+  res.json(await orderService.pendingOrders(req.user));
 });
 
 /** POST /api/orders { tableId, items } -> waiter enters an order directly (confirmed at once) */
@@ -36,9 +36,9 @@ router.post('/orders/:id/reject', authenticate, authorize('waiter', 'manager'), 
   res.json(await orderService.rejectOrder(idParam(req.params.id), reason, req.user, req.ip));
 });
 
-/** GET /api/kitchen/orders -> open orders, oldest first (also reloads after reconnect) */
+/** GET /api/kitchen/orders -> open orders, oldest first (also reloads after reconnect); a waiter gets only their own tables */
 router.get('/kitchen/orders', authenticate, authorize('kitchen', 'waiter', 'manager'), async (req, res) => {
-  res.json(await orderService.kitchenOrders());
+  res.json(await orderService.kitchenOrders(req.user));
 });
 
 /** PATCH /api/items/:id/status { status: cooking | ready | served } */

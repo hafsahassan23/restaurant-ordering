@@ -11,6 +11,13 @@ import { beep } from "../lib/beep";
 import { useNow } from "../lib/useNow";
 
 const NEXT = { ordered: "cooking", cooking: "ready" };
+
+/** Card colour per stage. Not started (needs attention): yellow. Cooking: red. Ready (waiting for the waiter): green. */
+const CARD = {
+  ordered: { frame: "border-2 border-amber-400", bar: "bg-accent", strip: "bg-amber-50 text-amber-800", badge: "bg-accent text-ink" },
+  cooking: { frame: "border-2 border-red-400", bar: "bg-paying", strip: "bg-red-50 text-red-700", badge: "bg-paying text-white" },
+  ready: { frame: "border-2 border-green-500", bar: "bg-free", strip: "bg-green-50 text-green-700", badge: "bg-free text-white" },
+};
 const VISIBLE = ["ordered", "cooking", "ready"];
 
 /** Ticket colour by age: green under 10 minutes, orange 10–20, red over 20 (with a text label too). */
@@ -65,6 +72,18 @@ export default function Kitchen() {
         .filter((order) => order.items.length > 0)
         .sort((a, b) => new Date(a.confirmed_at).getTime() - new Date(b.confirmed_at).getTime()),
     [orders],
+  );
+
+  // Queue position in the current language: Somali "1aad, 2aad", English "1st, 2nd, 3rd"
+  const ordinal = (n) => {
+    if (lang.startsWith("so")) return `${n}aad`;
+    const s = n % 100 >= 11 && n % 100 <= 13 ? "th" : { 1: "st", 2: "nd", 3: "rd" }[n % 10] || "th";
+    return `${n}${s}`;
+  };
+
+  // Queue: orders that still have something to cook, oldest confirmed first -> 1, 2, 3...
+  const queue = new Map(
+    visibleOrders.filter((o) => o.items.some((i) => i.status !== "ready")).map((o, i) => [o.id, i + 1]),
   );
 
   const allItems = visibleOrders.flatMap((order) => order.items);
@@ -128,10 +147,53 @@ export default function Kitchen() {
           {visibleOrders.map((order) => {
             const mins = minutesSince(order.confirmed_at, now);
             const age = ageStyle(mins);
+            const pos = queue.get(order.id); // undefined = everything cooked, waiting for the waiter
+            const first = pos === 1;
+            // Card colour follows the work: not started = yellow, cooking = red, all ready = green
+            const stage = order.items.every((i) => i.status === "ready")
+              ? "ready"
+              : order.items.some((i) => i.status === "cooking")
+                ? "cooking"
+                : "ordered";
+            const look = CARD[stage];
+            // First, next, ... last: the kitchen sees at a glance which order came in first and which came in last
+            const label = !pos
+              ? t("kitchen.waitingWaiter")
+              : first
+                ? t("kitchen.cookFirst")
+                : pos === 2
+                  ? t("kitchen.queueNext")
+                  : pos === queue.size
+                    ? t("kitchen.queueLast")
+                    : t("kitchen.position", { pos: ordinal(pos) });
             return (
-              <article key={order.id} className="relative overflow-hidden rounded-xl border border-line bg-white shadow-card">
-                <div className={`absolute inset-x-0 top-0 h-1.5 ${age.bar}`} aria-hidden="true" />
-                <header className="flex items-start justify-between gap-3 border-b border-line px-4 pb-3 pt-5">
+              <article
+                key={order.id}
+                aria-label={`${label} · ${t("kitchen.table")} ${order.table_number}`}
+                className={`relative overflow-hidden rounded-xl bg-white shadow-card ${look.frame}`}
+              >
+                <div className={`absolute inset-x-0 top-0 h-1.5 ${look.bar}`} aria-hidden="true" />
+                {/* Place in the queue: the kitchen always knows which order comes first, second, third */}
+                <div
+                  className={`flex items-center justify-between gap-2 px-4 pb-2 pt-3.5 text-xs font-semibold ${look.strip}`}
+                >
+                  <span className="inline-flex items-center gap-1.5">
+                    <span
+                      className={`tabular grid h-6 min-w-6 place-items-center rounded-full px-1.5 text-[13px] font-extrabold ${
+                        look.badge
+                      }`}
+                    >
+                      {pos || <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />}
+                    </span>
+                    <span className="uppercase tracking-wider">{label}</span>
+                  </span>
+                  <span className="tabular font-medium">
+                    {t("kitchen.confirmedAt", {
+                      time: new Date(order.confirmed_at).toLocaleTimeString(lang, { hour: "2-digit", minute: "2-digit" }),
+                    })}
+                  </span>
+                </div>
+                <header className="flex items-start justify-between gap-3 border-b border-line px-4 pb-3 pt-2">
                   <div className="flex items-center gap-3">
                     <span className="grid h-12 min-w-12 place-items-center rounded-lg bg-ink px-2 text-xl font-extrabold text-white">{order.table_number}</span>
                     <div className="leading-tight">
